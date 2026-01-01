@@ -3,15 +3,15 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Öğretmen Adayı Mentor Geri Bildirim Sistemi</title>
+  <title>Öğretmen Adayı Mentor Sistemi</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <header class="container">
     <h1>Mentor Geri Bildirim Sistemi</h1>
     <p class="muted">
-      Videodaki öğrencinin düşünmesini <b>dikkate alma</b>, <b>yorumlama</b> ve <b>karar verme</b> başlıklarında
-      yazın; sistem mentor tarzı geri bildirim üretsin. Sonunda <b>Kaydet</b> ile cihazınıza indirin.
+      Videodaki öğrencinin düşünmesini <b>dikkate alma</b>, <b>yorumlama</b> ve <b>karar verme</b> başlıklarında yazın.
+      <b>Mentor</b> ile çok turlu sohbet ederek geri bildirim alın. Süreç bitince <b>Kaydet ve İndir</b>.
     </p>
   </header>
 
@@ -72,34 +72,33 @@
       </div>
 
       <div class="row actions">
-        <button class="btn primary" id="getFeedbackBtn" type="button">Mentor Geri Bildirimi Al</button>
+        <button class="btn primary" id="startMentorBtn" type="button">Mentor Sohbetini Başlat</button>
         <button class="btn" id="clearBtn" type="button">Temizle</button>
       </div>
 
       <div class="status" id="status" role="status" aria-live="polite"></div>
+    </section>
+
+    <section class="card">
+      <h2>4) Mentor ile Sohbet</h2>
+      <div class="chat" id="chat" aria-label="Mentor sohbeti"></div>
+
+      <div class="row actions">
+        <input id="chatInput" type="text" class="grow" placeholder="Mentora mesaj yazın..." />
+        <button class="btn primary" id="sendBtn" type="button">Gönder</button>
+      </div>
 
       <div class="field">
-        <label for="mentorFeedback">Mentor Geri Bildirimi</label>
-        <textarea id="mentorFeedback" rows="10" placeholder="Geri bildirim burada görünecek..." readonly></textarea>
+        <label for="mentorFeedback">Son Mentor Mesajı (otomatik)</label>
+        <textarea id="mentorFeedback" rows="6" placeholder="Mentor yanıtları sohbet içinde görünecek..." readonly></textarea>
         <p class="hint">
-          Not: Bu arayüz GitHub Pages üzerinde çalışır. Geri bildirim için Render üzerindeki API’ye istek gönderir.
+          Not: Bu sayfa GitHub Pages üzerinde statik çalışır. OpenAI anahtarı sadece Render backend’de olmalıdır.
         </p>
       </div>
 
       <div class="row actions">
         <button class="btn success" id="saveBtn" type="button">Kaydet ve İndir</button>
       </div>
-    </section>
-
-    <section class="card">
-      <h2>Bağlantı Durumu</h2>
-      <p class="muted">API adresi: <code id="apiBase"></code></p>
-      <button class="btn" id="testApiBtn" type="button">API Bağlantısını Test Et</button>
-      <pre class="mono" id="apiTestOutput" aria-label="API test çıktısı"></pre>
-      <p class="hint">
-        Eğer API’niz farklı bir yol kullanıyorsa <code>config.js</code> içindeki <code>ENDPOINT_CANDIDATES</code>
-        listesini güncelleyebilirsiniz.
-      </p>
     </section>
   </main>
 

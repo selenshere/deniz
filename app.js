@@ -1,4 +1,4 @@
-/* global API_BASE_URL, ENDPOINT_CANDIDATES, HEALTH_ENDPOINTS */
+/* global API_BASE_URL, ENDPOINT_CANDIDATES */
 
 const $ = (id) => document.getElementById(id);
 
@@ -12,37 +12,28 @@ const els = {
   attention: $("attention"),
   interpretation: $("interpretation"),
   decision: $("decision"),
-  getFeedbackBtn: $("getFeedbackBtn"),
+  startMentorBtn: $("startMentorBtn"),
   clearBtn: $("clearBtn"),
-  mentorFeedback: $("mentorFeedback"),
-  saveBtn: $("saveBtn"),
   status: $("status"),
-  apiBase: $("apiBase"),
-  testApiBtn: $("testApiBtn"),
-  apiTestOutput: $("apiTestOutput")
+  chat: $("chat"),
+  chatInput: $("chatInput"),
+  sendBtn: $("sendBtn"),
+  mentorFeedback: $("mentorFeedback"),
+  saveBtn: $("saveBtn")
 };
+
+let chatHistory = []; // {role:'user'|'mentor', content:'', ts:''}
 
 const DEFAULT_INSTRUCTION = `Görev:
 - Videodaki öğrencinin düşünmesini üç başlıkta analiz edin: (1) Dikkate Alma, (2) Yorumlama, (3) Karar Verme.
 - Metinlerinizi ilgili alanlara kopyala-yapıştır yapın.
-- “Mentor Geri Bildirimi Al” ile mentor tarzında; güçlü yönler + geliştirme önerileri + örnek soru/ifadeler içeren geri bildirim alın.
+- “Mentor Sohbetini Başlat” ile ilk geri bildirimi alın.
+- Ardından mentorla sohbet ederek ek açıklamalar isteyin / sorulara cevap verin.
 - Sonunda “Kaydet ve İndir” ile raporu cihazınıza indirin.`;
 
 function setStatus(msg, tone="info"){
   const prefix = tone === "ok" ? "✅ " : tone === "warn" ? "⚠️ " : tone === "err" ? "⛔ " : "ℹ️ ";
   els.status.textContent = prefix + msg;
-}
-
-function loadFromStorage(){
-  els.firstName.value = localStorage.getItem("mentor_firstName") || "";
-  els.lastName.value = localStorage.getItem("mentor_lastName") || "";
-  els.videoUrl.value = localStorage.getItem("mentor_videoUrl") || "";
-  els.instruction.value = localStorage.getItem("mentor_instruction") || DEFAULT_INSTRUCTION;
-
-  els.attention.value = localStorage.getItem("mentor_attention") || "";
-  els.interpretation.value = localStorage.getItem("mentor_interpretation") || "";
-  els.decision.value = localStorage.getItem("mentor_decision") || "";
-  els.mentorFeedback.value = localStorage.getItem("mentor_feedback") || "";
 }
 
 function saveToStorage(){
@@ -54,13 +45,32 @@ function saveToStorage(){
   localStorage.setItem("mentor_attention", els.attention.value);
   localStorage.setItem("mentor_interpretation", els.interpretation.value);
   localStorage.setItem("mentor_decision", els.decision.value);
-  localStorage.setItem("mentor_feedback", els.mentorFeedback.value);
+
+  localStorage.setItem("mentor_chatHistory", JSON.stringify(chatHistory));
+  localStorage.setItem("mentor_lastMentorMsg", els.mentorFeedback.value);
+}
+
+function loadFromStorage(){
+  els.firstName.value = localStorage.getItem("mentor_firstName") || "";
+  els.lastName.value = localStorage.getItem("mentor_lastName") || "";
+  els.videoUrl.value = localStorage.getItem("mentor_videoUrl") || "";
+  els.instruction.value = localStorage.getItem("mentor_instruction") || DEFAULT_INSTRUCTION;
+
+  els.attention.value = localStorage.getItem("mentor_attention") || "";
+  els.interpretation.value = localStorage.getItem("mentor_interpretation") || "";
+  els.decision.value = localStorage.getItem("mentor_decision") || "";
+
+  try{
+    chatHistory = JSON.parse(localStorage.getItem("mentor_chatHistory") || "[]");
+  }catch(_){
+    chatHistory = [];
+  }
+  els.mentorFeedback.value = localStorage.getItem("mentor_lastMentorMsg") || "";
+  renderChat();
 }
 
 function isValidName(){
-  const fn = els.firstName.value.trim();
-  const ln = els.lastName.value.trim();
-  return fn.length > 0 && ln.length > 0;
+  return els.firstName.value.trim().length > 0 && els.lastName.value.trim().length > 0;
 }
 
 function sanitizeFilenamePart(s){
@@ -74,16 +84,13 @@ function sanitizeFilenamePart(s){
 function toYouTubeEmbed(url){
   try{
     const u = new URL(url);
-    // youtu.be/<id>
     if(u.hostname.includes("youtu.be")){
       const id = u.pathname.replace("/", "");
       return `https://www.youtube.com/embed/${id}`;
     }
-    // youtube.com/watch?v=<id>
     if(u.hostname.includes("youtube.com")){
       const id = u.searchParams.get("v");
       if(id) return `https://www.youtube.com/embed/${id}`;
-      // youtube.com/embed/<id>
       if(u.pathname.startsWith("/embed/")) return url;
     }
   }catch(_){}
@@ -104,7 +111,6 @@ function renderVideo(url){
     return;
   }
 
-  // generic iframe attempt
   if(url){
     const iframe = document.createElement("iframe");
     iframe.src = url;
@@ -114,6 +120,32 @@ function renderVideo(url){
   }
 
   wrap.innerHTML = `<div class="videoPlaceholder">Video burada görünecek. Bağlantıyı yapıştırıp <b>Videoyu Yükle</b>’ye basın.</div>`;
+}
+
+function renderChat(){
+  els.chat.innerHTML = "";
+  for(const m of chatHistory){
+    const div = document.createElement("div");
+    div.className = "msg " + (m.role === "user" ? "user" : "mentor");
+
+    const meta = document.createElement("div");
+    meta.className = "meta";
+    meta.textContent = (m.role === "user" ? "Siz" : "Mentor") + " • " + new Date(m.ts).toLocaleString();
+
+    const body = document.createElement("div");
+    body.textContent = m.content;
+
+    div.appendChild(meta);
+    div.appendChild(body);
+    els.chat.appendChild(div);
+  }
+  els.chat.scrollTop = els.chat.scrollHeight;
+}
+
+function pushMsg(role, content){
+  chatHistory.push({ role, content, ts: new Date().toISOString() });
+  saveToStorage();
+  renderChat();
 }
 
 async function postJson(url, body){
@@ -135,7 +167,6 @@ async function tryMentorFeedback(payload){
     try{
       const r = await postJson(full, payload);
       if(r.ok){
-        // Accept a few common response shapes
         const fb =
           (r.data && (r.data.feedback || r.data.output || r.data.message || r.data.text)) ||
           (typeof r.data === "string" ? r.data : null) ||
@@ -150,49 +181,101 @@ async function tryMentorFeedback(payload){
   throw new Error("Hiçbir endpoint yanıt vermedi. Denenenler: " + errors.join(" | "));
 }
 
-async function onGetFeedback(){
-  saveToStorage();
-  if(!isValidName()){
-    setStatus("Lütfen isim ve soyisim alanlarını doldurun.", "warn");
-    return;
-  }
-
+function buildStarterMessage(){
   const attention = els.attention.value.trim();
   const interpretation = els.interpretation.value.trim();
   const decision = els.decision.value.trim();
 
   if(!attention && !interpretation && !decision){
-    setStatus("En az bir alana (Dikkate Alma / Yorumlama / Karar Verme) metin ekleyin.", "warn");
+    return null;
+  }
+
+  return [
+    "Aşağıdaki gözlemlerimi mentor olarak değerlendir.",
+    "Lütfen:",
+    "1) Güçlü yönleri belirt,",
+    "2) Geliştirme alanlarını somut önerilerle yaz,",
+    "3) Her başlık için (Dikkate Alma / Yorumlama / Karar Verme) örnek mentor soruları ver,",
+    "4) Bir sonraki adım için 2-3 hedef öner.",
+    "",
+    "DİKKATE ALMA:",
+    attention || "(boş)",
+    "",
+    "YORUMLAMA:",
+    interpretation || "(boş)",
+    "",
+    "KARAR VERME:",
+    decision || "(boş)"
+  ].join("\n");
+}
+
+async function onStartMentor(){
+  saveToStorage();
+
+  if(!isValidName()){
+    setStatus("Lütfen isim ve soyisim alanlarını doldurun.", "warn");
     return;
   }
 
-  els.getFeedbackBtn.disabled = true;
-  setStatus("Mentor geri bildirimi hazırlanıyor...", "info");
+  if(chatHistory.length === 0){
+    const starter = buildStarterMessage();
+    if(!starter){
+      setStatus("Sohbeti başlatmak için en az bir alana metin ekleyin.", "warn");
+      return;
+    }
+    pushMsg("user", starter);
+  }
+
+  await requestMentorTurn();
+}
+
+async function requestMentorTurn(){
+  els.startMentorBtn.disabled = true;
+  els.sendBtn.disabled = true;
+  setStatus("Mentor yanıtlıyor...", "info");
 
   const payload = {
     name: els.firstName.value.trim(),
     surname: els.lastName.value.trim(),
     instruction: els.instruction.value,
     observations: {
-      dikkate_alma: attention,
-      yorumlama: interpretation,
-      karar_verme: decision
+      dikkate_alma: els.attention.value.trim(),
+      yorumlama: els.interpretation.value.trim(),
+      karar_verme: els.decision.value.trim()
     },
-    // backend tarafında prompt oluşturmayı kolaylaştırmak için ipucu:
-    rubric: ["Dikkate Alma", "Yorumlama", "Karar Verme"],
+    messages: chatHistory.map(m => ({ role: m.role, content: m.content })),
     language: "tr"
   };
 
   try{
     const result = await tryMentorFeedback(payload);
-    els.mentorFeedback.value = result.feedback?.trim() || "";
+    const reply = (result.feedback || "").trim() || "(Boş yanıt)";
+    pushMsg("mentor", reply);
+    els.mentorFeedback.value = reply;
     saveToStorage();
-    setStatus(`Geri bildirim alındı. (endpoint: ${result.endpoint})`, "ok");
+    setStatus(`Yanıt alındı. (endpoint: ${result.endpoint})`, "ok");
   }catch(e){
     setStatus(String(e.message || e), "err");
   }finally{
-    els.getFeedbackBtn.disabled = false;
+    els.startMentorBtn.disabled = false;
+    els.sendBtn.disabled = false;
   }
+}
+
+async function onSendMessage(){
+  saveToStorage();
+  if(!isValidName()){
+    setStatus("Sohbet için isim ve soyisim zorunlu.", "warn");
+    return;
+  }
+  const text = els.chatInput.value.trim();
+  if(!text){
+    setStatus("Mesaj boş olamaz.", "warn");
+    return;
+  }
+  pushMsg("user", text);
+  els.chatInput.value = "";
+  await requestMentorTurn();
 }
 
 function onClear(){
@@ -200,8 +283,10 @@ function onClear(){
   els.interpretation.value = "";
   els.decision.value = "";
   els.mentorFeedback.value = "";
+  chatHistory = [];
   saveToStorage();
-  setStatus("Alanlar temizlendi.", "ok");
+  renderChat();
+  setStatus("Alanlar ve sohbet temizlendi.", "ok");
 }
 
 function downloadTextFile(filename, content){
@@ -222,6 +307,7 @@ function onSave(){
     setStatus("Kaydetmek için isim ve soyisim zorunludur.", "warn");
     return;
   }
+
   const now = new Date();
   const stamp = now.toISOString().replace(/[:]/g,"-").replace(/\..+/, "");
   const fn = sanitizeFilenamePart(els.firstName.value);
@@ -239,7 +325,8 @@ function onSave(){
       yorumlama: els.interpretation.value,
       karar_verme: els.decision.value
     },
-    mentor_geribildirim: els.mentorFeedback.value
+    sohbet: chatHistory,
+    son_mentor_mesaji: els.mentorFeedback.value
   };
 
   const txt = [
@@ -266,14 +353,16 @@ function onSave(){
     "-----------",
     report.girdiler.karar_verme || "",
     "",
-    "MENTOR GERİ BİLDİRİMİ",
-    "----------------------",
-    report.mentor_geribildirim || "",
+    "SOHBET GEÇMİŞİ",
+    "-------------",
+    ...report.sohbet.map(m => `[${m.role}] ${m.content}`),
+    "",
+    "SON MENTOR MESAJI",
+    "-----------------",
+    report.son_mentor_mesaji || "",
     ""
   ].join("\n");
 
-  // Requirement: "kullanıcı adı soy adı ve deniz olarak tamamlanıp cihaza inecek"
-  // => filename includes name_surname_deniz
   const filenameTxt = `${fn}_${ln}_deniz_${stamp}.txt`;
   const filenameJson = `${fn}_${ln}_deniz_${stamp}.json`;
 
@@ -281,32 +370,6 @@ function onSave(){
   downloadTextFile(filenameJson, JSON.stringify(report, null, 2));
 
   setStatus("Rapor indirildi (TXT + JSON).", "ok");
-}
-
-async function onTestApi(){
-  els.apiTestOutput.textContent = "";
-  setStatus("API test ediliyor...", "info");
-  const base = API_BASE_URL.replace(/\/$/, "");
-  const lines = [];
-  for(const ep of HEALTH_ENDPOINTS){
-    const url = base + ep;
-    try{
-      const res = await fetch(url, { method: "GET" });
-      lines.push(`${ep} -> HTTP ${res.status}`);
-      if(res.ok){
-        const ct = res.headers.get("content-type") || "";
-        const text = await res.text();
-        lines.push(ct.includes("text/html") ? "(HTML) OK" : text.slice(0, 500));
-        setStatus(`API erişilebilir görünüyor. (${ep})`, "ok");
-        els.apiTestOutput.textContent = lines.join("\n");
-        return;
-      }
-    }catch(e){
-      lines.push(`${ep} -> ${String(e)}`);
-    }
-  }
-  setStatus("API testinde sorun var. Render uygulamanız uyuyor mu? (503/CORS olabilir)", "warn");
-  els.apiTestOutput.textContent = lines.join("\n");
 }
 
 function wireEvents(){
@@ -324,21 +387,22 @@ function wireEvents(){
     const url = els.videoUrl.value.trim();
     renderVideo(url);
     saveToStorage();
-    setStatus(url ? "Video yüklendi (iframe)." : "Video bağlantısı boş.", url ? "ok" : "warn");
+    setStatus(url ? "Video yüklendi." : "Video bağlantısı boş.", url ? "ok" : "warn");
   });
 
-  els.getFeedbackBtn.addEventListener("click", onGetFeedback);
+  els.startMentorBtn.addEventListener("click", onStartMentor);
+  els.sendBtn.addEventListener("click", onSendMessage);
+  els.chatInput.addEventListener("keydown", (e)=>{ if(e.key === "Enter") onSendMessage(); });
+
   els.clearBtn.addEventListener("click", onClear);
   els.saveBtn.addEventListener("click", onSave);
-  els.testApiBtn.addEventListener("click", onTestApi);
 }
 
 function init(){
-  els.apiBase.textContent = API_BASE_URL;
   loadFromStorage();
   renderVideo(els.videoUrl.value.trim());
   wireEvents();
-  setStatus("Hazır. İsim+soyisim girin, videoyu yükleyin, metinleri yapıştırın.", "ok");
+  setStatus("Hazır. İsim+soyisim girin, gözlemleri yapıştırın, sohbeti başlatın.", "ok");
 }
 
 init();

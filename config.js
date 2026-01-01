@@ -12,6 +12,3 @@ const ENDPOINT_CANDIDATES = [
   "/api/chat",
   "/chat"
 ];
-
-// Optional: a simple health check endpoint (if you have one)
-const HEALTH_ENDPOINTS = ["/health", "/api/health", "/"];
