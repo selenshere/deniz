@@ -64,26 +64,7 @@
     <section class="right">
       <div class="card chat-card">
         <div class="card-title">Chatbot</div>
-
-        
-        <div class="prep">
-          <div class="prep-title">Başlangıç Metinleri (kopyala-yapıştır)</div>
-
-          <label class="prep-label">Dikkate Alma (Attending)</label>
-          <textarea id="preAtt" rows="3" placeholder="Dikkate Alma metnini buraya yapıştır..."></textarea>
-
-          <label class="prep-label">Yorumlama (Interpreting)</label>
-          <textarea id="preInt" rows="3" placeholder="Yorumlama metnini buraya yapıştır..."></textarea>
-
-          <label class="prep-label">Karar Verme (Responding)</label>
-          <textarea id="preRes" rows="3" placeholder="Karar Verme metnini buraya yapıştır..."></textarea>
-
-          <div class="prep-actions">
-            <button id="startBtn" class="btn">Başla</button>
-          </div>
-        </div>
-
-        <div id="chat" class="chat"></div>
+<div id="chat" class="chat"></div>
 
         
         <div class="composer">
@@ -99,5 +80,65 @@
   </main>
 
   <script src="app.js"></script>
+
+  <button id="closeModal" class="icon-btn" title="Kapat" aria-label="Kapat">✕</button>
+      </div>
+
+      <div class="modal-grid">
+        <div>
+          <label class="prep-label">Dikkate Alma (Attending)</label>
+          
+        </div>
+        <div>
+          <label class="prep-label">Yorumlama (Interpreting)</label>
+          
+        </div>
+        <div>
+          <label class="prep-label">Karar Verme (Responding)</label>
+          
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button id="startBtn" class="btn">Başla</button>
+        <button id="startBtnEmpty" class="btn secondary" title="Metinleri sonra gireceğim">Şimdilik geç</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Başlangıç Pop-up -->
+  <div id="startModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal">
+      <div class="modal-head">
+        <div>
+          <div class="modal-title">Başlangıç Metinleri</div>
+          <div class="modal-subtitle">Lütfen üç boyut için daha önce yazdığınız metinleri kopyala-yapıştır yapın. Sonra <b>Başla</b>'ya tıklayın.</div>
+        </div>
+        <button id="closeModal" class="icon-btn" title="Kapat" aria-label="Kapat">✕</button>
+      </div>
+
+      <div class="modal-grid">
+        <div>
+          <label class="prep-label">Dikkate Alma (Attending)</label>
+          <textarea id="preAtt" rows="4" placeholder="Dikkate Alma metnini buraya yapıştır..."></textarea>
+        </div>
+        <div>
+          <label class="prep-label">Yorumlama (Interpreting)</label>
+          <textarea id="preInt" rows="4" placeholder="Yorumlama metnini buraya yapıştır..."></textarea>
+        </div>
+        <div>
+          <label class="prep-label">Karar Verme (Responding)</label>
+          <textarea id="preRes" rows="4" placeholder="Karar Verme metnini buraya yapıştır..."></textarea>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button id="startBtn" class="btn">Başla</button>
+        <button id="startBtnEmpty" class="btn secondary" title="Metinleri sonra gireceğim">Şimdilik geç</button>
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>

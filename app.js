@@ -5,7 +5,11 @@ const saveBtn = document.getElementById("saveBtn");
 const firstNameEl = document.getElementById("firstName");
 const lastNameEl = document.getElementById("lastName");
 
+/* Modal elements */
+const modalOverlay = document.getElementById("startModal");
+const closeModalBtn = document.getElementById("closeModal");
 const startBtn = document.getElementById("startBtn");
+const startBtnEmpty = document.getElementById("startBtnEmpty");
 const preAttEl = document.getElementById("preAtt");
 const preIntEl = document.getElementById("preInt");
 const preResEl = document.getElementById("preRes");
@@ -23,7 +27,7 @@ const DIM = {
 };
 
 let stage = "idle"; // idle | coach_att | coach_int | coach_res | final_collect
-let current = DIM.ATT; // current dimension object
+let current = DIM.ATT;
 
 const initialAnswers = { DikkateAlma: "", Yorumlama: "", KararVerme: "" };
 const finalAnswers = { DikkateAlma: "", Yorumlama: "", KararVerme: "" };
@@ -80,7 +84,6 @@ function addMessage(role, content) {
 
 function isStrongEvidence(assistantText) {
   const t = (assistantText || "").toLowerCase();
-  // Accept multiple likely Turkish/English patterns
   return (
     t.includes("evidence level: 2") ||
     t.includes("evidence level 2") ||
@@ -92,108 +95,39 @@ function isStrongEvidence(assistantText) {
     t.includes("seviye 2") ||
     t.includes("düzey: 2") ||
     t.includes("düzey 2") ||
-    // sometimes uses "2 (Strong evidence)"
     t.includes("2 (strong") ||
-    t.includes("2 (güçlü") ||
-    t.includes("güçlü kanıt") && (t.includes("seviye 2") || t.includes("düzey 2") || t.includes("2"))
+    t.includes("2 (güçlü")
   );
 }
 
 function tag(dimObj, kind) {
-  // kind: "Başlangıç" | "Final" | "Revize"
   return `[${dimObj.tr}${kind ? " - " + kind : ""}]`;
 }
 
-async function send() {
-  const user = requireName();
-  if (!user) return;
-
-  const raw = inputEl.value.trim();
-  if (!raw) return;
-
-  // Final collection: user sends three separate final messages.
-  // We still tag with current dimension unless they explicitly label it.
-  let dimObj = current;
-
-  const content = `${tag(dimObj, stage === "final_collect" ? "Final" : "Revize")} ${raw}`;
-  addMessage("user", content);
-  inputEl.value = "";
-
-  sendBtn.disabled = true;
-  sendBtn.textContent = "Gönderiliyor...";
-
-  try {
-    const messages = logs.map(l => ({
-      role: l.role === "assistant" ? "assistant" : "user",
-      content: l.content
-    }));
-
-    const resp = await fetch("https://deniz-vazb.onrender.com/api/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...user, messages })
-    });
-
-    const data = await resp.json();
-    if (!resp.ok) throw new Error(data?.error || "İstek başarısız.");
-
-    const assistantText = data.assistant || "";
-    addMessage("assistant", assistantText);
-
-    // Stage transitions based on strong evidence signal
-    if (stage.startsWith("coach_") && isStrongEvidence(assistantText)) {
-      if (stage === "coach_att") {
-        stage = "coach_int";
-        current = DIM.INT;
-        addMessage("assistant", `✅ Dikkate Alma tamam. Şimdi **Yorumlama** için revize edilmiş yeni halini gönder.`);
-      } else if (stage === "coach_int") {
-        stage = "coach_res";
-        current = DIM.RES;
-        addMessage("assistant", `✅ Yorumlama tamam. Şimdi **Karar Verme** için revize edilmiş yeni halini gönder.`);
-      } else if (stage === "coach_res") {
-        stage = "final_collect";
-        addMessage("assistant",
-`✅ Karar Verme de tamam.
-
-Şimdi lütfen **SON HALİNİ** her boyut için ayrı ayrı gönder:
-1) Dikkate Alma – Final
-2) Yorumlama – Final
-3) Karar Verme – Final
-
-Not: Her mesajda Deniz’in çalışmasından somut kanıt ve hem deficit hem strength yönelimini koru.`);
-      }
-    }
-
-    // In final_collect, store last three user messages by switching dimension order
-    if (stage === "final_collect") {
-      // If user has already provided final for current dim, move to next
-      if (current === DIM.ATT) {
-        finalAnswers.DikkateAlma = raw;
-        current = DIM.INT;
-        addMessage("assistant", "Teşekkürler. Şimdi **Yorumlama – Final** mesajını gönder.");
-      } else if (current === DIM.INT) {
-        finalAnswers.Yorumlama = raw;
-        current = DIM.RES;
-        addMessage("assistant", "Harika. Şimdi **Karar Verme – Final** mesajını gönder.");
-      } else if (current === DIM.RES) {
-        finalAnswers.KararVerme = raw;
-        addMessage("assistant", "✅ Tüm final yanıtlar alındı. İstersen şimdi **Kaydet (JSON)** ile indirebilirsin.");
-        // stop auto-advancing
-      }
-    }
-
-  } catch (e) {
-    console.error(e);
-    addMessage("assistant", `Üzgünüm, bir hata oldu: ${e.message}`);
-  } finally {
-    sendBtn.disabled = false;
-    sendBtn.textContent = "Gönder";
-  }
+function showModal() {
+  if (!modalOverlay) return;
+  modalOverlay.classList.add("show");
+  modalOverlay.setAttribute("aria-hidden", "false");
 }
 
-sendBtn.addEventListener("click", send);
-inputEl.addEventListener("keydown", (e) => {
-  if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) send();
+function hideModal() {
+  if (!modalOverlay) return;
+  modalOverlay.classList.remove("show");
+  modalOverlay.setAttribute("aria-hidden", "true");
+}
+
+closeModalBtn?.addEventListener("click", hideModal);
+modalOverlay?.addEventListener("click", (e) => {
+  if (e.target === modalOverlay) hideModal();
+});
+
+startBtnEmpty?.addEventListener("click", () => {
+  // Allow entering later; keep stage idle
+  hideModal();
+  addMessage("assistant",
+    "Tamam. Başlangıç metinlerini daha sonra girebilirsin. " +
+    "Yine de istersen şimdi **Dikkate Alma** için metnini göndererek başlayabilirsin."
+  );
 });
 
 startBtn?.addEventListener("click", () => {
@@ -220,6 +154,8 @@ startBtn?.addEventListener("click", () => {
   stage = "coach_att";
   current = DIM.ATT;
 
+  hideModal();
+
   addMessage("assistant",
 `Teşekkürler! Şimdi sırayla ilerleyeceğiz.
 
@@ -227,6 +163,91 @@ startBtn?.addEventListener("click", () => {
 Lütfen Dikkate Alma için **revize edilmiş yeni halini** gönder.
 - Hem deficit (zorluk/yanılgı) hem strength (güçlü yan/kaynak) kanıtı ekle.
 - Mutlaka Deniz’in çalışmasından somut bir ayrıntıya dayan.`);
+});
+
+async function send() {
+  const user = requireName();
+  if (!user) return;
+
+  const raw = inputEl.value.trim();
+  if (!raw) return;
+
+  const content = `${tag(current, stage === "final_collect" ? "Final" : "Revize")} ${raw}`;
+  addMessage("user", content);
+  inputEl.value = "";
+
+  sendBtn.disabled = true;
+  sendBtn.textContent = "Gönderiliyor...";
+
+  try {
+    const messages = logs.map(l => ({
+      role: l.role === "assistant" ? "assistant" : "user",
+      content: l.content
+    }));
+
+    const resp = await fetch("https://deniz-vazb.onrender.com/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...user, messages })
+    });
+
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data?.error || "İstek başarısız.");
+
+    const assistantText = data.assistant || "";
+    addMessage("assistant", assistantText);
+
+    if (stage.startsWith("coach_") && isStrongEvidence(assistantText)) {
+      if (stage === "coach_att") {
+        stage = "coach_int";
+        current = DIM.INT;
+        addMessage("assistant", "✅ Dikkate Alma tamam. Şimdi **Yorumlama** için revize edilmiş yeni halini gönder.");
+      } else if (stage === "coach_int") {
+        stage = "coach_res";
+        current = DIM.RES;
+        addMessage("assistant", "✅ Yorumlama tamam. Şimdi **Karar Verme** için revize edilmiş yeni halini gönder.");
+      } else if (stage === "coach_res") {
+        stage = "final_collect";
+        current = DIM.ATT;
+        addMessage("assistant",
+`✅ Karar Verme de tamam.
+
+Şimdi lütfen **SON HALİNİ** her boyut için ayrı ayrı gönder:
+1) Dikkate Alma – Final
+2) Yorumlama – Final
+3) Karar Verme – Final
+
+Her birini ayrı mesaj olarak gönderebilirsin.`);
+      }
+    }
+
+    if (stage === "final_collect") {
+      if (current === DIM.ATT) {
+        finalAnswers.DikkateAlma = raw;
+        current = DIM.INT;
+        addMessage("assistant", "Teşekkürler. Şimdi **Yorumlama – Final** mesajını gönder.");
+      } else if (current === DIM.INT) {
+        finalAnswers.Yorumlama = raw;
+        current = DIM.RES;
+        addMessage("assistant", "Harika. Şimdi **Karar Verme – Final** mesajını gönder.");
+      } else if (current === DIM.RES) {
+        finalAnswers.KararVerme = raw;
+        addMessage("assistant", "✅ Tüm final yanıtlar alındı. İstersen şimdi **Kaydet (JSON)** ile indirebilirsin.");
+      }
+    }
+
+  } catch (e) {
+    console.error(e);
+    addMessage("assistant", `Üzgünüm, bir hata oldu: ${e.message}`);
+  } finally {
+    sendBtn.disabled = false;
+    sendBtn.textContent = "Gönder";
+  }
+}
+
+sendBtn.addEventListener("click", send);
+inputEl.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) send();
 });
 
 saveBtn.addEventListener("click", () => {
@@ -254,13 +275,10 @@ saveBtn.addEventListener("click", () => {
   URL.revokeObjectURL(a.href);
 });
 
-// Seed greeting
+// Seed greeting + open modal at start
 addMessage("assistant",
 `Merhaba! Ben Noticing Mentor’un.
 
-Bu araca başlamadan önce, aşağıdaki kutulara daha önce yazdığın metinleri yapıştır:
-- **Dikkate Alma (Attending)**
-- **Yorumlama (Interpreting)**
-- **Karar Verme (Responding)**
+Başlamak için üstte isim/soyisim yaz. Sonra başlangıç metinlerini girmek için pop-up açılacak.`);
 
-Sonra **Başla**’ya tıkla. Ben de her boyutta seni **0–1–2** kanıt düzeyine göre yönlendireceğim (cevabı söylemeden).`);
+showModal();
