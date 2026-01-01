@@ -148,13 +148,6 @@
     const decision = (els.decision?.value || "").trim();
 
     return [
-      "Aşağıdaki gözlemlerimi (Dikkate Alma / Yorumlama / Karar Verme) üzerinden mentor olarak bana rehberlik et.",
-      "Lütfen kodlama şeması veya kategori isimleri verme; bunun yerine her başlık için:",
-      "1) Ne kadar somut kanıta dayandığımı değerlendir (genel mi, öğrencinin söz/çizim/eylemine mi dayanıyor?).",
-      "2) Strong evidence seviyesine çıkmam için 2-3 net takip sorusu sor ve hangi öğrenci ayrıntılarına dayanmam gerektiğini söyle.",
-      "3) Güçlü-yan (strength-based) çerçeveye kaymam için beni yönlendir ve bir sonraki adımda nasıl yanıt vereceğime dair soru sor.",
-      "Matematik öğretme, doğru çözüm verme, algoritma anlatma.",
-      "",
       "DİKKATE ALMA:",
       attention,
       "",
