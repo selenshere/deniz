@@ -10,7 +10,8 @@ const lastNameEl = document.getElementById("lastName");
 // Start modal elements
 const startModalEl = document.getElementById("startModal");
 const startBtnEl = document.getElementById("startBtn");
-const skipModalEl = document.getElementById("skipModal");
+const modalFirstNameEl = document.getElementById("modalFirstName");
+const modalLastNameEl = document.getElementById("modalLastName");
 const pasteAttEl = document.getElementById("pasteAttending");
 const pasteIntEl = document.getElementById("pasteInterpreting");
 const pasteResEl = document.getElementById("pasteResponding");
@@ -147,6 +148,13 @@ function setComposerEnabled(enabled) {
 }
 
 function openStartModal() {
+  // Modal açılırken isim alanlarını header ile senkronla
+  if (modalFirstNameEl && firstNameEl && !modalFirstNameEl.value) {
+    modalFirstNameEl.value = firstNameEl.value;
+  }
+  if (modalLastNameEl && lastNameEl && !modalLastNameEl.value) {
+    modalLastNameEl.value = lastNameEl.value;
+  }
   startModalEl.classList.add("show");
   startModalEl.setAttribute("aria-hidden", "false");
 }
@@ -156,19 +164,20 @@ function closeStartModal() {
   startModalEl.setAttribute("aria-hidden", "true");
 }
 
-async function startFromPastes({ skip = false } = {}) {
+function syncModalNameToHeader() {
+  // Modal açıkken header alanları kapalı kalabileceği için isim/soyisim'i buradan senkronla
+  if (modalFirstNameEl && modalFirstNameEl.value.trim()) firstNameEl.value = modalFirstNameEl.value.trim();
+  if (modalLastNameEl && modalLastNameEl.value.trim()) lastNameEl.value = modalLastNameEl.value.trim();
+}
+
+async function startFromPastes() {
+  syncModalNameToHeader();
   const user = requireName();
-  if (!user) return;
+  if (!user) return; // isim/soyisim yoksa modal kapanmasın
 
   sessionStarted = true;
   closeStartModal();
   setComposerEnabled(true);
-
-  if (skip) {
-    addMessage("assistant",
-`Merhaba! Ben Noticing Mentor’un.\n\nİlk adım: Deniz'in çalışmasından yola çıkarak [Attending] için gözlemini yaz.\n- Hem deficit (zorluk/yanılgı) hem strength (güçlü yan/kaynak) kanıtı eklemeyi unutma.\n- Mutlaka Deniz'in işinden somut bir ayrıntıya dayan.\n\nGöndermek için “Gönder”e basabilir veya Ctrl/⌘ + Enter kullanabilirsin.`);
-    return;
-  }
 
   const a = (pasteAttEl?.value || "").trim();
   const i = (pasteIntEl?.value || "").trim();
@@ -219,7 +228,10 @@ async function startFromPastes({ skip = false } = {}) {
 
 // Modal wiring
 startBtnEl.addEventListener("click", () => startFromPastes());
-skipModalEl.addEventListener("click", () => startFromPastes({ skip: true }));
+
+// Modal isim alanları değişince header'a yansıt
+modalFirstNameEl?.addEventListener("input", syncModalNameToHeader);
+modalLastNameEl?.addEventListener("input", syncModalNameToHeader);
 
 // İlk açılışta modal göster ve composer'ı kilitle
 setComposerEnabled(false);

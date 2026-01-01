@@ -221,6 +221,26 @@ select:focus, textarea:focus { border-color: rgba(47,111,235,0.40); }
 }
 .modal-title { font-weight: 800; letter-spacing: 0.2px; }
 .modal-sub { font-size: 13px; color: var(--muted); margin-top: 4px; }
+
+.modal-user {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin: 12px 0 6px;
+}
+
+.modal-user label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+@media (min-width: 520px) {
+  .modal-user { grid-template-columns: 1fr 1fr; }
+}
+
 .modal-grid {
   display: grid;
   grid-template-columns: 1fr;
