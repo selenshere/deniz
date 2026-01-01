@@ -25,6 +25,12 @@ let chatHistory = []; // {role:'user'|'mentor', content:'', ts:''}
 
 const FIXED_INSTRUCTION = 'Videodaki öğrencinin düşünmesini dikkate alma, yorumlama ve karar verme başlıklarında yazın. Mentor ile çok turlu sohbet ederek geri bildirim alın. Süreç bitince Kaydet ve İndir.';
 
+// ---- Refresh behavior ----
+// This build intentionally DOES NOT auto-restore from localStorage on page load,
+// so refreshing the page starts clean (what you asked for).
+// We still save to localStorage while working, so data exists in the browser,
+// but it won't be auto-loaded unless you call loadFromStorage() manually.
+
 function setStatus(msg, tone="info"){
   const prefix = tone === "ok" ? "✅ " : tone === "warn" ? "⚠️ " : tone === "err" ? "⛔ " : "ℹ️ ";
   els.status.textContent = prefix + msg;
@@ -389,8 +395,10 @@ function wireEvents(){
 }
 
 function init(){
-  loadFromStorage();
-  renderVideo(els.videoUrl.value.trim());
+  // Clean start on refresh:
+  chatHistory = [];
+  renderChat();
+  renderVideo("");
   wireEvents();
   setStatus("Hazır. İsim+soyisim girin, gözlemleri yapıştırın, sohbeti başlatın.", "ok");
 }
