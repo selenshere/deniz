@@ -74,7 +74,7 @@ async function send() {
       content: l.content
     }));
 
-    const resp = await fetch("https://https://deniz-vazb.onrender.com/api/chat", {
+    const resp = await fetch("https://deniz-vazb.onrender.com/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ...user, messages })
