@@ -19,10 +19,44 @@ const pasteResEl = document.getElementById("pasteResponding");
 const logs = []; // {role, content, ts}
 let sessionStarted = false;
 
-// API base (same-origin by default). If you host the frontend separately,
-// set <meta name="api-base" content="https://your-backend.example.com"> in index.html.
-const API_BASE = (document.querySelector('meta[name="api-base"]')?.getAttribute("content") || "").trim();
-const API_CHAT_URL = API_BASE ? `${API_BASE.replace(/\/$/, "")}/api/chat` : "/api/chat";
+// API base (same-origin by default).
+// If you host the frontend separately, you MUST point it to the backend.
+// You can set it in three ways (first match wins):
+// 1) URL query: ?api=https://your-backend.example.com
+// 2) localStorage: apiBase
+// 3) index.html meta: <meta name="api-base" content="https://your-backend.example.com">
+const META_API_BASE = (document.querySelector('meta[name="api-base"]')?.getAttribute("content") || "").trim();
+
+function getQueryApiBase() {
+  try {
+    const u = new URL(window.location.href);
+    return (u.searchParams.get("api") || "").trim();
+  } catch {
+    return "";
+  }
+}
+
+function getStoredApiBase() {
+  try {
+    return (localStorage.getItem("apiBase") || "").trim();
+  } catch {
+    return "";
+  }
+}
+
+function setStoredApiBase(value) {
+  try {
+    if (!value) localStorage.removeItem("apiBase");
+    else localStorage.setItem("apiBase", value);
+  } catch {
+    // ignore
+  }
+}
+
+function getApiChatUrl() {
+  const apiBase = getQueryApiBase() || getStoredApiBase() || META_API_BASE;
+  return apiBase ? `${apiBase.replace(/\/$/, "")}/api/chat` : "/api/chat";
+}
 
 async function readJsonSafely(resp) {
   const ct = resp.headers.get("content-type") || "";
@@ -35,6 +69,22 @@ async function readJsonSafely(resp) {
   }
   const text = await resp.text().catch(() => "");
   return { _text: text };
+}
+
+function maybeHelpConfigureApiBase(resp, data) {
+  // If the frontend is hosted statically, /api/chat will hit the static host and often return HTML + 405.
+  const ct = resp.headers.get("content-type") || "";
+  const looksLikeHtml = !ct.includes("application/json") && typeof data?._text === "string" && data._text.trim().startsWith("<");
+  if (resp.status !== 405 && !looksLikeHtml) return false;
+
+  const current = getQueryApiBase() || getStoredApiBase() || META_API_BASE || "";
+  const hint =
+    "Bu sayfa backend'siz (statik) çalışıyor gibi görünüyor.\n" +
+    "Lütfen /api/chat endpoint'inin bulunduğu backend adresini girin (ör: https://your-app.onrender.com).";
+  const value = (window.prompt(hint, current) || "").trim();
+  if (!value) return false;
+  setStoredApiBase(value);
+  return true;
 }
 
 function nowISO() {
@@ -107,7 +157,7 @@ async function send() {
       content: l.content
     }));
 
-    const resp = await fetch(API_CHAT_URL, {
+    const resp = await fetch(getApiChatUrl(), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ...user, messages })
@@ -115,6 +165,10 @@ async function send() {
 
     const data = await readJsonSafely(resp);
     if (!resp.ok) {
+      // Offer a one-time configuration helper for common 405/HTML cases
+      if (maybeHelpConfigureApiBase(resp, data)) {
+        return await send();
+      }
       const fallback = data?._text
         ? `Sunucudan JSON gelmedi (${resp.status}). API adresini kontrol edin.`
         : "İstek başarısız.";
@@ -245,7 +299,7 @@ async function startFromPastes() {
       content: l.content
     }));
 
-    const resp = await fetch(API_CHAT_URL, {
+    const resp = await fetch(getApiChatUrl(), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ...user, messages })
@@ -254,6 +308,9 @@ async function startFromPastes() {
     // Some hosting setups may return HTML error pages; guard JSON parsing
     const data = await readJsonSafely(resp);
     if (!resp.ok) {
+      if (maybeHelpConfigureApiBase(resp, data)) {
+        return await startFromPastes();
+      }
       const msg = data?.error || (data?._text ? `Sunucudan JSON gelmedi (${resp.status}). API adresini kontrol edin.` : "İstek başarısız.");
       throw new Error(msg);
     }
