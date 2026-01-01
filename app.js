@@ -3,6 +3,7 @@ const chatEl = document.getElementById("chat");
 const inputEl = document.getElementById("input");
 const sendBtn = document.getElementById("sendBtn");
 const saveBtn = document.getElementById("saveBtn");
+// Dimension selector was removed from UI; keep optional support if it exists.
 const dimEl = document.getElementById("dimension");
 const firstNameEl = document.getElementById("firstName");
 const lastNameEl = document.getElementById("lastName");
@@ -142,8 +143,8 @@ async function send() {
   const raw = inputEl.value.trim();
   if (!raw) return;
 
-  const dimension = dimEl.value;
-  const content = `[${dimension}] ${raw}`;
+  const dimension = (dimEl?.value || "").trim();
+  const content = dimension ? `[${dimension}] ${raw}` : raw;
 
   addMessage("user", content);
   inputEl.value = "";
@@ -214,7 +215,7 @@ saveBtn.addEventListener("click", () => {
 });
 
 function setComposerEnabled(enabled) {
-  dimEl.disabled = !enabled;
+  if (dimEl) dimEl.disabled = !enabled;
   inputEl.disabled = !enabled;
   sendBtn.disabled = !enabled;
   if (!enabled) {
@@ -238,6 +239,10 @@ function openStartModal() {
 function closeStartModal() {
   startModalEl.classList.remove("show");
   startModalEl.setAttribute("aria-hidden", "true");
+  // Ensure the overlay is gone and the composer is ready
+  setTimeout(() => {
+    try { inputEl?.focus(); } catch {}
+  }, 0);
 }
 
 function syncModalNameToHeader() {
