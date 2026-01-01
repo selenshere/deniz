@@ -1,6 +1,6 @@
 // Render backend base URL
 // IMPORTANT: GitHub Pages is static; keep API keys on the server (Render), not here.
-const API_BASE_URL = "https://deniz-vazb.onrender.com";
+const API_BASE_URL = "https://deniz-oe44.onrender.com";
 
 // The frontend will try these endpoints in order until one works (HTTP 200-299).
 // Update this list to match your Render app.
