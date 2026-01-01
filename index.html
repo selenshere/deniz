@@ -12,7 +12,7 @@
       <div class="logo">🧭</div>
       <div>
         <div class="title">Noticing Mentor</div>
-        <div class="subtitle">Öğrenci: <b>Deniz</b> — Attending • Interpreting • Responding</div>
+        <div class="subtitle">Öğrenci: <b>Deniz</b> — Dikkate Alma • Yorumlama • Karar Verme</div>
       </div>
     </div>
 
@@ -52,7 +52,7 @@
         <div class="instructions" id="instructions">
           <ol>
             <li>Önce <b>Deniz</b>'in çözümünü/konuşmasını okuyun.</li>
-            <li>Aşağıdaki sırayla yazın: <b>Attending</b>, <b>Interpreting</b>, <b>Responding</b>.</li>
+            <li>Aşağıdaki sırayla yazın: <b>Dikkate Alma</b>, <b>Yorumlama</b>, <b>Karar Verme</b>.</li>
             <li>Her boyutta hem <b>deficit</b> (zorluk/yanılgı) hem <b>strength</b> (kaynak/güçlü yan) kanıtı ekleyin.</li>
             <li>Genel cümlelerden kaçının; mutlaka <b>öğrencinin işine/ifadesine</b> dayanın.</li>
             <li>Mentor size 0–1–2 kanıt düzeyi verecek ve <b>cevabı söylemeden</b> revize ettirecek.</li>
@@ -65,15 +65,29 @@
       <div class="card chat-card">
         <div class="card-title">Chatbot</div>
 
+        
+        <div class="prep">
+          <div class="prep-title">Başlangıç Metinleri (kopyala-yapıştır)</div>
+
+          <label class="prep-label">Dikkate Alma (Attending)</label>
+          <textarea id="preAtt" rows="3" placeholder="Dikkate Alma metnini buraya yapıştır..."></textarea>
+
+          <label class="prep-label">Yorumlama (Interpreting)</label>
+          <textarea id="preInt" rows="3" placeholder="Yorumlama metnini buraya yapıştır..."></textarea>
+
+          <label class="prep-label">Karar Verme (Responding)</label>
+          <textarea id="preRes" rows="3" placeholder="Karar Verme metnini buraya yapıştır..."></textarea>
+
+          <div class="prep-actions">
+            <button id="startBtn" class="btn">Başla</button>
+          </div>
+        </div>
+
         <div id="chat" class="chat"></div>
 
+        
         <div class="composer">
-          <select id="dimension">
-            <option value="Attending">Attending</option>
-            <option value="Interpreting">Interpreting</option>
-            <option value="Responding">Responding</option>
-          </select>
-          <textarea id="input" rows="3" placeholder="Mesajınızı yazın... (örn. Attending için Deniz'in çalışmasında gördüğünüz kanıtlar)"></textarea>
+          <textarea id="input" rows="3" placeholder="Mesajınızı yazın..."></textarea>
           <button id="sendBtn" class="btn">Gönder</button>
         </div>
 
