@@ -10,6 +10,15 @@ const __dirname = path.dirname(__filename);
 const app = express();
 app.use(express.json({ limit: "1mb" }));
 
+// CORS / preflight (helps when deployed behind different origins/proxies)
+app.use((req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+  if (req.method === "OPTIONS") return res.sendStatus(204);
+  next();
+});
+
 // Serve the static site
 app.use(express.static(__dirname));
 
@@ -197,6 +206,12 @@ may you label it:
 
 At that point, briefly explain why it qualifies and proceed to the next dimension.
 `;
+
+// Make sure non-POST calls don't return HTML (prevents JSON parse errors on the client)
+app.all("/api/chat", (req, res, next) => {
+  if (req.method === "POST") return next();
+  return res.status(405).json({ error: "Method Not Allowed. Use POST /api/chat." });
+});
 
 // Basic safety: deny if key missing
 app.post("/api/chat", async (req, res) => {

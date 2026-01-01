@@ -214,8 +214,13 @@ async function startFromPastes() {
       body: JSON.stringify({ ...user, messages })
     });
 
-    const data = await resp.json();
-    if (!resp.ok) throw new Error(data?.error || "İstek başarısız.");
+    // Some hosting setups may return HTML error pages; guard JSON parsing
+    const ct = resp.headers.get("content-type") || "";
+    const data = ct.includes("application/json") ? await resp.json() : { _text: await resp.text() };
+    if (!resp.ok) {
+      const msg = data?.error || (data?._text ? `Sunucudan JSON gelmedi (${resp.status}).` : "İstek başarısız.");
+      throw new Error(msg);
+    }
 
     addMessage("assistant", data.assistant || "");
   } catch (e) {
