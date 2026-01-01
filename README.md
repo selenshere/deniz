@@ -1,12 +1,15 @@
-# Mentor Geri Bildirim Sistemi (GitHub Pages) — v4
+# Mentor Backend (Render)
 
-## v4 Yenilik
-- Refresh sonrası sayfa **temiz başlar** (auto-restore kapalı).
-- Video + kopyala-yapıştır alanları yan yana.
-- Yönerge metni sayfanın üstüne taşındı.
+## Endpoints
+- GET /health -> { ok: true }
+- POST /api/mentor-feedback -> { feedback: "..." }
 
-## Dosyalar
-- index.html
-- styles.css
-- app.js
-- config.js
+## Render settings (copy)
+- Environment: Node
+- Build Command: npm install
+- Start Command: node server.js
+
+## Environment variables
+- OPENAI_API_KEY = your key (required)
+- OPENAI_MODEL = gpt-4o-mini (optional)
+- FRONTEND_ORIGIN = * (optional; you can set to your GitHub Pages URL later)
