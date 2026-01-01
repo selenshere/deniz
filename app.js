@@ -199,10 +199,21 @@
       setStatus("Dikkate Alma, Yorumlama ve Karar Verme kutularının üçü de zorunludur.", "warn");
       return;
     }
-
     if (chatHistory.length === 0) {
-      pushMsg("user", buildStarterMessage());
-    }
+    const rawInput = `
+DİKKATE ALMA:
+${els.attention.value}
+
+YORUMLAMA:
+${els.interpretation.value}
+
+KARAR VERME:
+${els.decision.value}
+`.trim();
+
+  pushMsg("user", rawInput);
+}
+
     await requestMentorTurn();
   }
 
