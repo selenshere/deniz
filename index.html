@@ -27,13 +27,8 @@
         </div>
       </div>
 
-      <div class="row">
-        <div class="field grow">
-          <label for="videoUrl">Video bağlantısı (YouTube/Drive vb.)</label>
-          <input id="videoUrl" type="url" placeholder="https://..." />
-        </div>
-        <button class="btn" id="loadVideoBtn" type="button">Videoyu Yükle</button>
-      </div>
+      <!-- Video sabit -->
+      <p class="hint"><b>Video:</b> Aşağıdaki videoyu izleyin (sabit).</p>
 
       <div class="split">
         <div class="videoCol">
@@ -82,13 +77,7 @@
         <button class="btn primary" id="sendBtn" type="button">Gönder</button>
       </div>
 
-      <div class="field">
-        <label for="mentorFeedback">Son Mentor Mesajı (otomatik)</label>
-        <textarea id="mentorFeedback" rows="6" placeholder="Mentor yanıtları sohbet içinde görünecek..." readonly></textarea>
-        <p class="hint">
-          Not: Bu sayfa GitHub Pages üzerinde statik çalışır. OpenAI anahtarı sadece Render backend’de olmalıdır.
-        </p>
-      </div>
+      
 
       <div class="row actions">
         <button class="btn success" id="saveBtn" type="button">Kaydet ve İndir</button>
