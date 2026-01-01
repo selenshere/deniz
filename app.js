@@ -19,6 +19,24 @@ const pasteResEl = document.getElementById("pasteResponding");
 const logs = []; // {role, content, ts}
 let sessionStarted = false;
 
+// API base (same-origin by default). If you host the frontend separately,
+// set <meta name="api-base" content="https://your-backend.example.com"> in index.html.
+const API_BASE = (document.querySelector('meta[name="api-base"]')?.getAttribute("content") || "").trim();
+const API_CHAT_URL = API_BASE ? `${API_BASE.replace(/\/$/, "")}/api/chat` : "/api/chat";
+
+async function readJsonSafely(resp) {
+  const ct = resp.headers.get("content-type") || "";
+  if (ct.includes("application/json")) {
+    try {
+      return await resp.json();
+    } catch {
+      // fall through
+    }
+  }
+  const text = await resp.text().catch(() => "");
+  return { _text: text };
+}
+
 function nowISO() {
   return new Date().toISOString();
 }
@@ -89,15 +107,18 @@ async function send() {
       content: l.content
     }));
 
-    const resp = await fetch("/api/chat", {
+    const resp = await fetch(API_CHAT_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ...user, messages })
     });
 
-    const data = await resp.json();
+    const data = await readJsonSafely(resp);
     if (!resp.ok) {
-      throw new Error(data?.error || "İstek başarısız.");
+      const fallback = data?._text
+        ? `Sunucudan JSON gelmedi (${resp.status}). API adresini kontrol edin.`
+        : "İstek başarısız.";
+      throw new Error(data?.error || fallback);
     }
 
     addMessage("assistant", data.assistant || "");
@@ -157,6 +178,7 @@ function openStartModal() {
   }
   startModalEl.classList.add("show");
   startModalEl.setAttribute("aria-hidden", "false");
+  updateStartBtnState();
 }
 
 function closeStartModal() {
@@ -170,7 +192,29 @@ function syncModalNameToHeader() {
   if (modalLastNameEl && modalLastNameEl.value.trim()) lastNameEl.value = modalLastNameEl.value.trim();
 }
 
+function validateStartModal() {
+  const missing = [];
+  if (!(modalFirstNameEl?.value || "").trim()) missing.push("İsim");
+  if (!(modalLastNameEl?.value || "").trim()) missing.push("Soyisim");
+  if (!(pasteAttEl?.value || "").trim()) missing.push("Attending");
+  if (!(pasteIntEl?.value || "").trim()) missing.push("Interpreting");
+  if (!(pasteResEl?.value || "").trim()) missing.push("Responding");
+  return missing;
+}
+
+function updateStartBtnState() {
+  const missing = validateStartModal();
+  if (startBtnEl) startBtnEl.disabled = missing.length > 0;
+}
+
 async function startFromPastes() {
+  const missing = validateStartModal();
+  if (missing.length) {
+    alert(`Lütfen pop-up içindeki zorunlu alanları doldurun: ${missing.join(", ")}`);
+    updateStartBtnState();
+    return;
+  }
+
   syncModalNameToHeader();
   const user = requireName();
   if (!user) return; // isim/soyisim yoksa modal kapanmasın
@@ -182,13 +226,6 @@ async function startFromPastes() {
   const a = (pasteAttEl?.value || "").trim();
   const i = (pasteIntEl?.value || "").trim();
   const r = (pasteResEl?.value || "").trim();
-
-  if (!a && !i && !r) {
-    // Boşsa: normal akış
-    addMessage("assistant",
-`Merhaba! Ben Noticing Mentor’un.\n\nİlk adım: Deniz'in çalışmasından yola çıkarak [Attending] için gözlemini yaz.\n- Hem deficit (zorluk/yanılgı) hem strength (güçlü yan/kaynak) kanıtı eklemeyi unutma.\n- Mutlaka Deniz'in işinden somut bir ayrıntıya dayan.\n\nGöndermek için “Gönder”e basabilir veya Ctrl/⌘ + Enter kullanabilirsin.`);
-    return;
-  }
 
   if (a) addMessage("user", `[Attending] ${a}`);
   if (i) addMessage("user", `[Interpreting] ${i}`);
@@ -208,17 +245,16 @@ async function startFromPastes() {
       content: l.content
     }));
 
-    const resp = await fetch("/api/chat", {
+    const resp = await fetch(API_CHAT_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ...user, messages })
     });
 
     // Some hosting setups may return HTML error pages; guard JSON parsing
-    const ct = resp.headers.get("content-type") || "";
-    const data = ct.includes("application/json") ? await resp.json() : { _text: await resp.text() };
+    const data = await readJsonSafely(resp);
     if (!resp.ok) {
-      const msg = data?.error || (data?._text ? `Sunucudan JSON gelmedi (${resp.status}).` : "İstek başarısız.");
+      const msg = data?.error || (data?._text ? `Sunucudan JSON gelmedi (${resp.status}). API adresini kontrol edin.` : "İstek başarısız.");
       throw new Error(msg);
     }
 
@@ -237,6 +273,11 @@ startBtnEl.addEventListener("click", () => startFromPastes());
 // Modal isim alanları değişince header'a yansıt
 modalFirstNameEl?.addEventListener("input", syncModalNameToHeader);
 modalLastNameEl?.addEventListener("input", syncModalNameToHeader);
+
+// Modal zorunlu alanlar doldukça butonu aç/kapat
+[modalFirstNameEl, modalLastNameEl, pasteAttEl, pasteIntEl, pasteResEl].forEach(el => {
+  el?.addEventListener("input", updateStartBtnState);
+});
 
 // İlk açılışta modal göster ve composer'ı kilitle
 setComposerEnabled(false);

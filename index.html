@@ -3,6 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <!-- Optional: Frontend and backend are expected to be served from the same origin.
+       If you host them separately, set this to your backend origin (no trailing slash).
+       Example: <meta name="api-base" content="https://your-backend.example.com"> -->
+  <meta name="api-base" content="" />
   <title>Deniz Noticing Mentor</title>
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -20,26 +24,26 @@
       <div class="modal-user">
         <label>
           <span>İsim <span class="req">*</span></span>
-          <input id="modalFirstName" type="text" placeholder="İsim" />
+          <input id="modalFirstName" type="text" placeholder="İsim" required />
         </label>
         <label>
           <span>Soyisim <span class="req">*</span></span>
-          <input id="modalLastName" type="text" placeholder="Soyisim" />
+          <input id="modalLastName" type="text" placeholder="Soyisim" required />
         </label>
       </div>
 
       <div class="modal-grid">
         <label>
           <span>Attending <span class="req">*</span></span>
-          <textarea id="pasteAttending" rows="4" placeholder="Attending cevabını buraya yapıştır..."></textarea>
+          <textarea id="pasteAttending" rows="4" placeholder="Attending cevabını buraya yapıştır..." required></textarea>
         </label>
         <label>
           <span>Interpreting <span class="req">*</span></span>
-          <textarea id="pasteInterpreting" rows="4" placeholder="Interpreting cevabını buraya yapıştır..."></textarea>
+          <textarea id="pasteInterpreting" rows="4" placeholder="Interpreting cevabını buraya yapıştır..." required></textarea>
         </label>
         <label>
           <span>Responding <span class="req">*</span></span>
-          <textarea id="pasteResponding" rows="4" placeholder="Responding cevabını buraya yapıştır..."></textarea>
+          <textarea id="pasteResponding" rows="4" placeholder="Responding cevabını buraya yapıştır..." required></textarea>
         </label>
       </div>
 
