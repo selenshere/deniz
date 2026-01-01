@@ -31,57 +31,46 @@
 
   <main class="layout">
     
+    
     <section class="left">
-      <div class="left-top">
-        <div class="card">
-          <div class="card-title">Yönergeler</div>
-          <div class="instructions" id="instructions">
-            <ol>
-              <li>Önce <b>Deniz</b>'in çözümünü/konuşmasını okuyun.</li>
-              <li>Aşağıdaki sırayla ilerleyeceğiz: <b>Dikkate Alma</b>, <b>Yorumlama</b>, <b>Karar Verme</b>.</li>
-              <li>Her boyutta hem <b>deficit</b> (zorluk/yanılgı) hem <b>strength</b> (kaynak/güçlü yan) kanıtı ekleyin.</li>
-              <li>Genel cümlelerden kaçının; mutlaka <b>öğrencinin işine/ifadesine</b> dayanın.</li>
-              <li>Mentor size 0–1–2 kanıt düzeyi verecek ve <b>cevabı söylemeden</b> revize ettirecek.</li>
-            </ol>
-          </div>
-        </div>
+      <div class="card">
+        <div class="card-title">Yönergeler</div>
+        <div class="instructions" id="instructions">
+          <ol>
+            <li>Üstte <b>İsim</b> ve <b>Soyisim</b> alanlarını doldurun.</li>
+            <li>Chat’e tek mesaj olarak, daha önce yazdığınız üç cevabı şu formatla yapıştırın:</li>
+          </ol>
+<pre class="template">Dikkate Alma:
+&lt;metin&gt;
 
-        <div class="card">
-          <div class="card-title">Video</div>
-          <div class="video-wrap">
-            <iframe
-              id="yt"
-              src="https://www.youtube.com/embed/dQw4w9WgXcQ"
-              title="YouTube video"
-              frameborder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              allowfullscreen></iframe>
-          </div>
-          <div class="hint">İsterseniz videoyu kendi YouTube linkinizle değiştirebilirsiniz.</div>
+Yorumlama:
+&lt;metin&gt;
+
+Karar Verme:
+&lt;metin&gt;</pre>
+          <ol start="3">
+            <li>Mentor önce <b>Dikkate Alma</b> üzerinde çalıştıracak; <b>2 (Güçlü Kanıt)</b> olunca sırayla <b>Yorumlama</b> ve <b>Karar Verme</b>’ye geçeceğiz.</li>
+            <li>Her boyutta hem <b>deficit</b> (zorluk/yanılgı) hem <b>strength</b> (kaynak/güçlü yan) kanıtı ekleyin ve mutlaka <b>Deniz</b>’in çalışmasına dayanın.</li>
+            <li>Mentor <b>cevabı söylemez</b>; sadece güçlü kanıta çıkmanız için sorularla yönlendirir.</li>
+          </ol>
         </div>
       </div>
 
       <div class="card">
-        <div class="card-title">Başlangıç Cevapları (kopyala-yapıştır)</div>
-        <div class="prep-grid">
-          <div>
-            <label class="prep-label">Dikkate Alma</label>
-            <textarea id="preAtt" rows="4" placeholder="Dikkate Alma cevabınızı buraya yapıştırın..."></textarea>
-          </div>
-          <div>
-            <label class="prep-label">Yorumlama</label>
-            <textarea id="preInt" rows="4" placeholder="Yorumlama cevabınızı buraya yapıştırın..."></textarea>
-          </div>
-          <div>
-            <label class="prep-label">Karar Verme</label>
-            <textarea id="preRes" rows="4" placeholder="Karar Verme cevabınızı buraya yapıştırın..."></textarea>
-          </div>
+        <div class="card-title">Video</div>
+        <div class="video-wrap">
+          <iframe
+            id="yt"
+            src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+            title="YouTube video"
+            frameborder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowfullscreen></iframe>
         </div>
-        <div class="prep-actions">
-          <button id="startBtn" class="btn">Başla</button>
-        </div>
+        <div class="hint">İsterseniz videoyu kendi YouTube linkinizle değiştirebilirsiniz.</div>
       </div>
     </section>
+
 
 
     <section class="right">

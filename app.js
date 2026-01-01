@@ -5,11 +5,6 @@ const saveBtn = document.getElementById("saveBtn");
 const firstNameEl = document.getElementById("firstName");
 const lastNameEl = document.getElementById("lastName");
 
-const startBtn = document.getElementById("startBtn");
-const preAttEl = document.getElementById("preAtt");
-const preIntEl = document.getElementById("preInt");
-const preResEl = document.getElementById("preRes");
-
 const logs = [];
 
 const DIM = {
@@ -24,9 +19,7 @@ let current = DIM.ATT;
 const initialAnswers = { DikkateAlma: "", Yorumlama: "", KararVerme: "" };
 const finalAnswers = { DikkateAlma: "", Yorumlama: "", KararVerme: "" };
 
-function nowISO() {
-  return new Date().toISOString();
-}
+function nowISO() { return new Date().toISOString(); }
 
 function requireName() {
   const fn = firstNameEl.value.trim();
@@ -39,10 +32,7 @@ function requireName() {
 }
 
 function sanitizeFilePart(s) {
-  return s
-    .trim()
-    .replace(/\s+/g, "_")
-    .replace(/[^\p{L}\p{N}_-]/gu, "");
+  return s.trim().replace(/\s+/g, "_").replace(/[^\p{L}\p{N}_-]/gu, "");
 }
 
 function addMessage(role, content) {
@@ -96,38 +86,60 @@ function tag(dimObj, kind) {
   return `[${dimObj.tr}${kind ? " - " + kind : ""}]`;
 }
 
-startBtn?.addEventListener("click", () => {
-  const user = requireName();
-  if (!user) return;
+/**
+ * Parse a single user message that contains:
+ * Dikkate Alma: ...
+ * Yorumlama: ...
+ * Karar Verme: ...
+ * Accepts common variations (case-insensitive).
+ */
+function parseInitialBlock(text) {
+  const t = (text || "").replace(/\r/g, "");
+  const norm = t.toLowerCase();
 
-  const a = (preAttEl?.value || "").trim();
-  const i = (preIntEl?.value || "").trim();
-  const r = (preResEl?.value || "").trim();
+  const markers = [
+    { key: "DikkateAlma", names: ["dikkate alma", "attending"] },
+    { key: "Yorumlama", names: ["yorumlama", "interpreting"] },
+    { key: "KararVerme", names: ["karar verme", "responding"] }
+  ];
 
-  if (!a || !i || !r) {
-    alert("Lütfen üç alanı da doldurun: Dikkate Alma, Yorumlama, Karar Verme.");
-    return;
+  // Find start indices for each marker
+  const found = [];
+  for (const m of markers) {
+    let idx = -1;
+    for (const name of m.names) {
+      const re = new RegExp(`(^|\\n)\\s*${name}\\s*:\\s*`, "i");
+      const match = re.exec(t);
+      if (match) { idx = match.index + match[0].length; break; }
+    }
+    if (idx !== -1) found.push({ key: m.key, idx });
   }
 
-  initialAnswers.DikkateAlma = a;
-  initialAnswers.Yorumlama = i;
-  initialAnswers.KararVerme = r;
+  if (found.length < 3) return null;
 
-  addMessage("user", `${tag(DIM.ATT, "Başlangıç")} ${a}`);
-  addMessage("user", `${tag(DIM.INT, "Başlangıç")} ${i}`);
-  addMessage("user", `${tag(DIM.RES, "Başlangıç")} ${r}`);
+  // Sort by idx and slice segments
+  found.sort((a,b)=>a.idx-b.idx);
+  const out = {};
+  for (let i=0;i<found.length;i++){
+    const start = found[i].idx;
+    const end = (i<found.length-1) ? (found[i+1].idx - 1) : t.length;
+    out[found[i].key] = t.slice(start, end).trim();
+  }
 
-  stage = "coach_att";
-  current = DIM.ATT;
+  if (!out.DikkateAlma || !out.Yorumlama || !out.KararVerme) return null;
+  return out;
+}
 
-  addMessage("assistant",
-`Teşekkürler! Şimdi sırayla ilerleyeceğiz.
-
-İlk adım: **Dikkate Alma** metnini geliştirelim.
-Lütfen Dikkate Alma için **revize edilmiş yeni halini** chat'e gönder.
-- Hem deficit hem strength kanıtı ekle.
-- Deniz’in çalışmasından somut bir ayrıntıya dayan.`);
-});
+async function callBackend(user, messages) {
+  const resp = await fetch("https://deniz-vazb.onrender.com/api/chat", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ...user, messages })
+  });
+  const data = await resp.json();
+  if (!resp.ok) throw new Error(data?.error || "İstek başarısız.");
+  return data.assistant || "";
+}
 
 async function send() {
   const user = requireName();
@@ -135,6 +147,51 @@ async function send() {
 
   const raw = inputEl.value.trim();
   if (!raw) return;
+
+  // In idle stage, first message must include the 3 initial answers block.
+  if (stage === "idle") {
+    const parsed = parseInitialBlock(raw);
+    if (!parsed) {
+      addMessage("assistant",
+`Başlamak için tek mesajda üç cevabı şu formatla yapıştır:
+Dikkate Alma:
+<metin>
+
+Yorumlama:
+<metin>
+
+Karar Verme:
+<metin>
+
+(İstersen başlıkları Attending/Interpreting/Responding olarak da yazabilirsin.)`);
+      return;
+    }
+
+    // Log user message as-is, then split into three initial logs
+    addMessage("user", raw);
+
+    initialAnswers.DikkateAlma = parsed.DikkateAlma;
+    initialAnswers.Yorumlama = parsed.Yorumlama;
+    initialAnswers.KararVerme = parsed.KararVerme;
+
+    addMessage("user", `${tag(DIM.ATT, "Başlangıç")} ${parsed.DikkateAlma}`);
+    addMessage("user", `${tag(DIM.INT, "Başlangıç")} ${parsed.Yorumlama}`);
+    addMessage("user", `${tag(DIM.RES, "Başlangıç")} ${parsed.KararVerme}`);
+
+    stage = "coach_att";
+    current = DIM.ATT;
+
+    addMessage("assistant",
+`Teşekkürler! Şimdi sırayla ilerleyeceğiz.
+
+İlk adım: **Dikkate Alma** metnini geliştirelim.
+Lütfen Dikkate Alma için **revize edilmiş yeni halini** gönder.
+- Hem deficit hem strength kanıtı ekle.
+- Deniz’in çalışmasından somut bir ayrıntıya dayan.`);
+
+    inputEl.value = "";
+    return;
+  }
 
   const content = `${tag(current, stage === "final_collect" ? "Final" : "Revize")} ${raw}`;
   addMessage("user", content);
@@ -149,16 +206,7 @@ async function send() {
       content: l.content
     }));
 
-    const resp = await fetch("https://deniz-vazb.onrender.com/api/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...user, messages })
-    });
-
-    const data = await resp.json();
-    if (!resp.ok) throw new Error(data?.error || "İstek başarısız.");
-
-    const assistantText = data.assistant || "";
+    const assistantText = await callBackend(user, messages);
     addMessage("assistant", assistantText);
 
     if (stage.startsWith("coach_") && isStrongEvidence(assistantText)) {
@@ -179,9 +227,7 @@ async function send() {
 Şimdi lütfen **SON HALİNİ** her boyut için ayrı ayrı gönder:
 1) Dikkate Alma – Final
 2) Yorumlama – Final
-3) Karar Verme – Final
-
-Her birini ayrı mesaj olarak gönderebilirsin.`);
+3) Karar Verme – Final`);
       }
     }
 
@@ -242,5 +288,14 @@ saveBtn.addEventListener("click", () => {
 addMessage("assistant",
 `Merhaba! Ben Noticing Mentor’un.
 
-Soldaki alana daha önce yazdığın 3 cevabı yapıştırıp **Başla**’ya tıkla.
-Sonra chat üzerinden revizyonlarla ilerleyeceğiz.`);
+Başlamak için chat’e tek mesajda şu formatla üç cevabını yapıştır:
+Dikkate Alma:
+<metin>
+
+Yorumlama:
+<metin>
+
+Karar Verme:
+<metin>
+
+Sonra birlikte sırayla 2 (Güçlü Kanıt) seviyesine çıkaracağız.`);
