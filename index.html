@@ -7,12 +7,45 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <!-- Başlangıç penceresi: kullanıcılar daha önce yazdıkları Attending/Interpreting/Responding metinlerini yapıştırır -->
+  <div id="startModal" class="modal-backdrop" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="startTitle">
+      <div class="modal-head">
+        <div>
+          <div id="startTitle" class="modal-title">Cevaplarını Yapıştır & Başla</div>
+          <div class="modal-sub">Daha önce yazdığın Attending / Interpreting / Responding metinlerini buraya kopyala-yapıştır. Mentor, her boyut için dönüt verecek.</div>
+        </div>
+        <button id="skipModal" class="btn secondary" type="button" title="Boş geç">Atla</button>
+      </div>
+
+      <div class="modal-grid">
+        <label>
+          <span>Attending</span>
+          <textarea id="pasteAttending" rows="4" placeholder="Attending cevabını buraya yapıştır..."></textarea>
+        </label>
+        <label>
+          <span>Interpreting</span>
+          <textarea id="pasteInterpreting" rows="4" placeholder="Interpreting cevabını buraya yapıştır..."></textarea>
+        </label>
+        <label>
+          <span>Responding</span>
+          <textarea id="pasteResponding" rows="4" placeholder="Responding cevabını buraya yapıştır..."></textarea>
+        </label>
+      </div>
+
+      <div class="modal-actions">
+        <div class="tiny">İpucu: Ctrl/⌘ + Enter ile her zaman mesaj gönderebilirsin.</div>
+        <button id="startBtn" class="btn" type="button">Chatbot'u Başlat</button>
+      </div>
+    </div>
+  </div>
+
   <header class="header">
     <div class="brand">
       <div class="logo">🧭</div>
       <div>
         <div class="title">Noticing Mentor</div>
-        <div class="subtitle">Öğrenci: <b>Deniz</b> — Dikkate Alma • Yorumlama • Karar Verme</div>
+        <div class="subtitle">Öğrenci: <b>Deniz</b> — Attending • Interpreting • Responding</div>
       </div>
     </div>
 
@@ -30,57 +63,50 @@
   </header>
 
   <main class="layout">
-    
-    
     <section class="left">
-      <div class="card">
-        <div class="card-title">Yönergeler</div>
-        <div class="instructions" id="instructions">
-          <ol>
-            <li>Üstte <b>İsim</b> ve <b>Soyisim</b> alanlarını doldurun.</li>
-            <li>Chat’e tek mesaj olarak, daha önce yazdığınız üç cevabı şu formatla yapıştırın:</li>
-          </ol>
-<pre class="template">Dikkate Alma:
-&lt;metin&gt;
-
-Yorumlama:
-&lt;metin&gt;
-
-Karar Verme:
-&lt;metin&gt;</pre>
-          <ol start="3">
-            <li>Mentor önce <b>Dikkate Alma</b> üzerinde çalıştıracak; <b>2 (Güçlü Kanıt)</b> olunca sırayla <b>Yorumlama</b> ve <b>Karar Verme</b>’ye geçeceğiz.</li>
-            <li>Her boyutta hem <b>deficit</b> (zorluk/yanılgı) hem <b>strength</b> (kaynak/güçlü yan) kanıtı ekleyin ve mutlaka <b>Deniz</b>’in çalışmasına dayanın.</li>
-            <li>Mentor <b>cevabı söylemez</b>; sadece güçlü kanıta çıkmanız için sorularla yönlendirir.</li>
-          </ol>
-        </div>
-      </div>
-
       <div class="card">
         <div class="card-title">Video</div>
         <div class="video-wrap">
+          <!-- Değiştirmek için: data-video-id alanını güncelle -->
           <iframe
             id="yt"
             src="https://www.youtube.com/embed/dQw4w9WgXcQ"
             title="YouTube video"
             frameborder="0"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            allowfullscreen></iframe>
+            allowfullscreen>
+          </iframe>
         </div>
         <div class="hint">İsterseniz videoyu kendi YouTube linkinizle değiştirebilirsiniz.</div>
       </div>
+
+      <div class="card">
+        <div class="card-title">Yönergeler</div>
+        <div class="instructions" id="instructions">
+          <ol>
+            <li>Önce <b>Deniz</b>'in çözümünü/konuşmasını okuyun.</li>
+            <li>Aşağıdaki sırayla yazın: <b>Attending</b>, <b>Interpreting</b>, <b>Responding</b>.</li>
+            <li>Her boyutta hem <b>deficit</b> (zorluk/yanılgı) hem <b>strength</b> (kaynak/güçlü yan) kanıtı ekleyin.</li>
+            <li>Genel cümlelerden kaçının; mutlaka <b>öğrencinin işine/ifadesine</b> dayanın.</li>
+            <li>Mentor size 0–1–2 kanıt düzeyi verecek ve <b>cevabı söylemeden</b> revize ettirecek.</li>
+          </ol>
+        </div>
+      </div>
     </section>
-
-
 
     <section class="right">
       <div class="card chat-card">
         <div class="card-title">Chatbot</div>
-<div id="chat" class="chat"></div>
 
-        
+        <div id="chat" class="chat"></div>
+
         <div class="composer">
-          <textarea id="input" rows="3" placeholder="Mesajınızı yazın..."></textarea>
+          <select id="dimension">
+            <option value="Attending">Attending</option>
+            <option value="Interpreting">Interpreting</option>
+            <option value="Responding">Responding</option>
+          </select>
+          <textarea id="input" rows="3" placeholder="Mesajınızı yazın... (örn. Attending için Deniz'in çalışmasında gördüğünüz kanıtlar)"></textarea>
           <button id="sendBtn" class="btn">Gönder</button>
         </div>
 
@@ -92,57 +118,5 @@ Karar Verme:
   </main>
 
   <script src="app.js"></script>
-
-  <button id="closeModal" class="icon-btn" title="Kapat" aria-label="Kapat">✕</button>
-      </div>
-
-      <div class="modal-grid">
-        <div>
-          <label class="prep-label">Dikkate Alma (Attending)</label>
-          
-        </div>
-        <div>
-          <label class="prep-label">Yorumlama (Interpreting)</label>
-          
-        </div>
-        <div>
-          <label class="prep-label">Karar Verme (Responding)</label>
-          
-        </div>
-      </div>
-
-      <div class="modal-actions">
-        <button id="startBtn" class="btn">Başla</button>
-        <button id="startBtnEmpty" class="btn secondary" title="Metinleri sonra gireceğim">Şimdilik geç</button>
-      </div>
-    </div>
-  </div>
-
-
-  <button id="closeModal" class="icon-btn" title="Kapat" aria-label="Kapat">✕</button>
-      </div>
-
-      <div class="modal-grid">
-        <div>
-          <label class="prep-label">Dikkate Alma (Attending)</label>
-          <textarea id="preAtt" rows="4" placeholder="Dikkate Alma metnini buraya yapıştır..."></textarea>
-        </div>
-        <div>
-          <label class="prep-label">Yorumlama (Interpreting)</label>
-          <textarea id="preInt" rows="4" placeholder="Yorumlama metnini buraya yapıştır..."></textarea>
-        </div>
-        <div>
-          <label class="prep-label">Karar Verme (Responding)</label>
-          <textarea id="preRes" rows="4" placeholder="Karar Verme metnini buraya yapıştır..."></textarea>
-        </div>
-      </div>
-
-      <div class="modal-actions">
-        <button id="startBtn" class="btn">Başla</button>
-        <button id="startBtnEmpty" class="btn secondary" title="Metinleri sonra gireceğim">Şimdilik geç</button>
-      </div>
-    </div>
-  </div>
-
 </body>
 </html>
