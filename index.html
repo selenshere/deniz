@@ -9,15 +9,14 @@
 <body>
   <header class="container">
     <h1>Mentor Geri Bildirim Sistemi</h1>
-    <p class="muted">
-      Videodaki öğrencinin düşünmesini <b>dikkate alma</b>, <b>yorumlama</b> ve <b>karar verme</b> başlıklarında yazın.
-      <b>Mentor</b> ile çok turlu sohbet ederek geri bildirim alın. Süreç bitince <b>Kaydet ve İndir</b>.
-    </p>
+    <p class="lead">Videodaki öğrencinin düşünmesini dikkate alma, yorumlama ve karar verme başlıklarında yazın. Mentor ile çok turlu sohbet ederek geri bildirim alın. Süreç bitince Kaydet ve İndir.</p>
   </header>
 
-  <main class="container grid">
+  <main class="container">
+    <!-- Compact identity + video + observations in one card -->
     <section class="card">
-      <h2>1) Kimlik Bilgileri</h2>
+      <h2>Başlangıç</h2>
+
       <div class="row">
         <div class="field">
           <label for="firstName">İsim <span class="req">*</span></label>
@@ -28,11 +27,7 @@
           <input id="lastName" type="text" placeholder="Örn: Yılmaz" autocomplete="family-name" />
         </div>
       </div>
-      <p class="hint">İsim ve soyisim zorunludur. Bilgiler tarayıcıda yerel olarak saklanır (localStorage).</p>
-    </section>
 
-    <section class="card">
-      <h2>2) Video ve Yönerge</h2>
       <div class="row">
         <div class="field grow">
           <label for="videoUrl">Video bağlantısı (YouTube/Drive vb.)</label>
@@ -41,46 +36,47 @@
         <button class="btn" id="loadVideoBtn" type="button">Videoyu Yükle</button>
       </div>
 
-      <div class="videoWrap" id="videoWrap" aria-label="Video izleme alanı">
-        <div class="videoPlaceholder">
-          Video burada görünecek. Bağlantıyı yapıştırıp <b>Videoyu Yükle</b>’ye basın.
+      <div class="split">
+        <div class="videoCol">
+          <div class="videoWrap" id="videoWrap" aria-label="Video izleme alanı">
+            <div class="videoPlaceholder">
+              Video burada görünecek. Bağlantıyı yapıştırıp <b>Videoyu Yükle</b>’ye basın.
+            </div>
+          </div>
+          <p class="hint">İsim ve soyisim zorunludur. Bilgiler tarayıcıda yerel olarak saklanır.</p>
         </div>
-      </div>
 
-      <div class="field">
-        <label for="instruction">Yönerge (düzenlenebilir)</label>
-        <textarea id="instruction" rows="5"></textarea>
-      </div>
-    </section>
+        <div class="obsCol" aria-label="Kopyala-yapıştır alanları">
+          <h3>Gözlemleriniz (Kopyala-Yapıştır)</h3>
 
-    <section class="card">
-      <h2>3) Gözlemleriniz (Kopyala-Yapıştır)</h2>
+          <div class="field">
+            <label for="attention">Dikkate Alma</label>
+            <textarea id="attention" rows="4" placeholder="Dikkate alma ile ilgili gözlemlerinizi buraya yapıştırın..."></textarea>
+          </div>
 
-      <div class="field">
-        <label for="attention">Dikkate Alma</label>
-        <textarea id="attention" rows="5" placeholder="Dikkate alma ile ilgili gözlemlerinizi buraya yapıştırın..."></textarea>
-      </div>
+          <div class="field">
+            <label for="interpretation">Yorumlama</label>
+            <textarea id="interpretation" rows="4" placeholder="Yorumlama ile ilgili gözlemlerinizi buraya yapıştırın..."></textarea>
+          </div>
 
-      <div class="field">
-        <label for="interpretation">Yorumlama</label>
-        <textarea id="interpretation" rows="5" placeholder="Yorumlama ile ilgili gözlemlerinizi buraya yapıştırın..."></textarea>
-      </div>
+          <div class="field">
+            <label for="decision">Karar Verme</label>
+            <textarea id="decision" rows="4" placeholder="Karar verme ile ilgili gözlemlerinizi buraya yapıştırın..."></textarea>
+          </div>
 
-      <div class="field">
-        <label for="decision">Karar Verme</label>
-        <textarea id="decision" rows="5" placeholder="Karar verme ile ilgili gözlemlerinizi buraya yapıştırın..."></textarea>
-      </div>
-
-      <div class="row actions">
-        <button class="btn primary" id="startMentorBtn" type="button">Mentor Sohbetini Başlat</button>
-        <button class="btn" id="clearBtn" type="button">Temizle</button>
+          <div class="row actions">
+            <button class="btn primary" id="startMentorBtn" type="button">Mentor Sohbetini Başlat</button>
+            <button class="btn" id="clearBtn" type="button">Temizle</button>
+          </div>
+        </div>
       </div>
 
       <div class="status" id="status" role="status" aria-live="polite"></div>
     </section>
 
+    <!-- Chat + save section (same as before) -->
     <section class="card">
-      <h2>4) Mentor ile Sohbet</h2>
+      <h2>Mentor ile Sohbet</h2>
       <div class="chat" id="chat" aria-label="Mentor sohbeti"></div>
 
       <div class="row actions">
