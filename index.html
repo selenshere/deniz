@@ -30,36 +30,59 @@
   </header>
 
   <main class="layout">
+    
     <section class="left">
-      <div class="card">
-        <div class="card-title">Video</div>
-        <div class="video-wrap">
-          <!-- Değiştirmek için: data-video-id alanını güncelle -->
-          <iframe
-            id="yt"
-            src="https://www.youtube.com/embed/dQw4w9WgXcQ"
-            title="YouTube video"
-            frameborder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            allowfullscreen>
-          </iframe>
+      <div class="left-top">
+        <div class="card">
+          <div class="card-title">Yönergeler</div>
+          <div class="instructions" id="instructions">
+            <ol>
+              <li>Önce <b>Deniz</b>'in çözümünü/konuşmasını okuyun.</li>
+              <li>Aşağıdaki sırayla ilerleyeceğiz: <b>Dikkate Alma</b>, <b>Yorumlama</b>, <b>Karar Verme</b>.</li>
+              <li>Her boyutta hem <b>deficit</b> (zorluk/yanılgı) hem <b>strength</b> (kaynak/güçlü yan) kanıtı ekleyin.</li>
+              <li>Genel cümlelerden kaçının; mutlaka <b>öğrencinin işine/ifadesine</b> dayanın.</li>
+              <li>Mentor size 0–1–2 kanıt düzeyi verecek ve <b>cevabı söylemeden</b> revize ettirecek.</li>
+            </ol>
+          </div>
         </div>
-        <div class="hint">İsterseniz videoyu kendi YouTube linkinizle değiştirebilirsiniz.</div>
+
+        <div class="card">
+          <div class="card-title">Video</div>
+          <div class="video-wrap">
+            <iframe
+              id="yt"
+              src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+              title="YouTube video"
+              frameborder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowfullscreen></iframe>
+          </div>
+          <div class="hint">İsterseniz videoyu kendi YouTube linkinizle değiştirebilirsiniz.</div>
+        </div>
       </div>
 
       <div class="card">
-        <div class="card-title">Yönergeler</div>
-        <div class="instructions" id="instructions">
-          <ol>
-            <li>Önce <b>Deniz</b>'in çözümünü/konuşmasını okuyun.</li>
-            <li>Aşağıdaki sırayla yazın: <b>Dikkate Alma</b>, <b>Yorumlama</b>, <b>Karar Verme</b>.</li>
-            <li>Her boyutta hem <b>deficit</b> (zorluk/yanılgı) hem <b>strength</b> (kaynak/güçlü yan) kanıtı ekleyin.</li>
-            <li>Genel cümlelerden kaçının; mutlaka <b>öğrencinin işine/ifadesine</b> dayanın.</li>
-            <li>Mentor size 0–1–2 kanıt düzeyi verecek ve <b>cevabı söylemeden</b> revize ettirecek.</li>
-          </ol>
+        <div class="card-title">Başlangıç Cevapları (kopyala-yapıştır)</div>
+        <div class="prep-grid">
+          <div>
+            <label class="prep-label">Dikkate Alma</label>
+            <textarea id="preAtt" rows="4" placeholder="Dikkate Alma cevabınızı buraya yapıştırın..."></textarea>
+          </div>
+          <div>
+            <label class="prep-label">Yorumlama</label>
+            <textarea id="preInt" rows="4" placeholder="Yorumlama cevabınızı buraya yapıştırın..."></textarea>
+          </div>
+          <div>
+            <label class="prep-label">Karar Verme</label>
+            <textarea id="preRes" rows="4" placeholder="Karar Verme cevabınızı buraya yapıştırın..."></textarea>
+          </div>
+        </div>
+        <div class="prep-actions">
+          <button id="startBtn" class="btn">Başla</button>
         </div>
       </div>
     </section>
+
 
     <section class="right">
       <div class="card chat-card">
@@ -107,15 +130,7 @@
   </div>
 
 
-  <!-- Başlangıç Pop-up -->
-  <div id="startModal" class="modal-overlay" aria-hidden="true">
-    <div class="modal">
-      <div class="modal-head">
-        <div>
-          <div class="modal-title">Başlangıç Metinleri</div>
-          <div class="modal-subtitle">Lütfen üç boyut için daha önce yazdığınız metinleri kopyala-yapıştır yapın. Sonra <b>Başla</b>'ya tıklayın.</div>
-        </div>
-        <button id="closeModal" class="icon-btn" title="Kapat" aria-label="Kapat">✕</button>
+  <button id="closeModal" class="icon-btn" title="Kapat" aria-label="Kapat">✕</button>
       </div>
 
       <div class="modal-grid">

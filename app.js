@@ -5,19 +5,11 @@ const saveBtn = document.getElementById("saveBtn");
 const firstNameEl = document.getElementById("firstName");
 const lastNameEl = document.getElementById("lastName");
 
-/* Modal elements */
-const modalOverlay = document.getElementById("startModal");
-const closeModalBtn = document.getElementById("closeModal");
 const startBtn = document.getElementById("startBtn");
-const startBtnEmpty = document.getElementById("startBtnEmpty");
 const preAttEl = document.getElementById("preAtt");
 const preIntEl = document.getElementById("preInt");
 const preResEl = document.getElementById("preRes");
 
-/**
- * Logs are stored client-side and exported on demand.
- * log item: { role: "user"|"assistant", content: string, ts: ISO }
- */
 const logs = [];
 
 const DIM = {
@@ -104,32 +96,6 @@ function tag(dimObj, kind) {
   return `[${dimObj.tr}${kind ? " - " + kind : ""}]`;
 }
 
-function showModal() {
-  if (!modalOverlay) return;
-  modalOverlay.classList.add("show");
-  modalOverlay.setAttribute("aria-hidden", "false");
-}
-
-function hideModal() {
-  if (!modalOverlay) return;
-  modalOverlay.classList.remove("show");
-  modalOverlay.setAttribute("aria-hidden", "true");
-}
-
-closeModalBtn?.addEventListener("click", hideModal);
-modalOverlay?.addEventListener("click", (e) => {
-  if (e.target === modalOverlay) hideModal();
-});
-
-startBtnEmpty?.addEventListener("click", () => {
-  // Allow entering later; keep stage idle
-  hideModal();
-  addMessage("assistant",
-    "Tamam. Başlangıç metinlerini daha sonra girebilirsin. " +
-    "Yine de istersen şimdi **Dikkate Alma** için metnini göndererek başlayabilirsin."
-  );
-});
-
 startBtn?.addEventListener("click", () => {
   const user = requireName();
   if (!user) return;
@@ -154,15 +120,13 @@ startBtn?.addEventListener("click", () => {
   stage = "coach_att";
   current = DIM.ATT;
 
-  hideModal();
-
   addMessage("assistant",
 `Teşekkürler! Şimdi sırayla ilerleyeceğiz.
 
-İlk adım: **Dikkate Alma (Attending)** metnini geliştirelim.
-Lütfen Dikkate Alma için **revize edilmiş yeni halini** gönder.
-- Hem deficit (zorluk/yanılgı) hem strength (güçlü yan/kaynak) kanıtı ekle.
-- Mutlaka Deniz’in çalışmasından somut bir ayrıntıya dayan.`);
+İlk adım: **Dikkate Alma** metnini geliştirelim.
+Lütfen Dikkate Alma için **revize edilmiş yeni halini** chat'e gönder.
+- Hem deficit hem strength kanıtı ekle.
+- Deniz’in çalışmasından somut bir ayrıntıya dayan.`);
 });
 
 async function send() {
@@ -275,10 +239,8 @@ saveBtn.addEventListener("click", () => {
   URL.revokeObjectURL(a.href);
 });
 
-// Seed greeting + open modal at start
 addMessage("assistant",
 `Merhaba! Ben Noticing Mentor’un.
 
-Başlamak için üstte isim/soyisim yaz. Sonra başlangıç metinlerini girmek için pop-up açılacak.`);
-
-showModal();
+Soldaki alana daha önce yazdığın 3 cevabı yapıştırıp **Başla**’ya tıkla.
+Sonra chat üzerinden revizyonlarla ilerleyeceğiz.`);
