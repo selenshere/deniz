@@ -2,130 +2,112 @@
 <html lang="tr">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <!-- Optional: Frontend and backend are expected to be served from the same origin.
-       If you host them separately, set this to your backend origin (no trailing slash).
-       Example: <meta name="api-base" content="https://your-backend.example.com"> -->
-  <meta name="api-base" content="https://deniz-vazb.onrender.com" />
-  <title>Deniz Noticing Mentor</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Öğretmen Adayı Mentor Geri Bildirim Sistemi</title>
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <!-- Başlangıç penceresi: kullanıcılar daha önce yazdıkları Attending/Interpreting/Responding metinlerini yapıştırır -->
-  <div id="startModal" class="modal-backdrop" aria-hidden="true">
-    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="startTitle">
-      <div class="modal-head">
-        <div>
-          <div id="startTitle" class="modal-title">Cevaplarını Yapıştır & Başla</div>
-          <div class="modal-sub">Daha önce yazdığın Attending / Interpreting / Responding metinlerini buraya kopyala-yapıştır. Mentor, her boyut için dönüt verecek.</div>
-        </div>
-      </div>
-
-      <div class="modal-user">
-        <label>
-          <span>İsim <span class="req">*</span></span>
-          <input id="modalFirstName" type="text" placeholder="İsim" required />
-        </label>
-        <label>
-          <span>Soyisim <span class="req">*</span></span>
-          <input id="modalLastName" type="text" placeholder="Soyisim" required />
-        </label>
-      </div>
-
-      <div class="modal-grid">
-        <label>
-          <span>Attending <span class="req">*</span></span>
-          <textarea id="pasteAttending" rows="4" placeholder="Attending cevabını buraya yapıştır..." required></textarea>
-        </label>
-        <label>
-          <span>Interpreting <span class="req">*</span></span>
-          <textarea id="pasteInterpreting" rows="4" placeholder="Interpreting cevabını buraya yapıştır..." required></textarea>
-        </label>
-        <label>
-          <span>Responding <span class="req">*</span></span>
-          <textarea id="pasteResponding" rows="4" placeholder="Responding cevabını buraya yapıştır..." required></textarea>
-        </label>
-      </div>
-
-      <div class="modal-actions">
-        <div class="tiny">İpucu: Ctrl/⌘ + Enter ile her zaman mesaj gönderebilirsin.</div>
-        <button id="startBtn" class="btn" type="button">Chatbot'u Başlat</button>
-      </div>
-    </div>
-  </div>
-
-  <header class="header">
-    <div class="brand">
-      <div class="logo">🧭</div>
-      <div>
-        <div class="title">Noticing Mentor</div>
-        <div class="subtitle">Öğrenci: <b>Deniz</b> — Attending • Interpreting • Responding</div>
-      </div>
-    </div>
-
-    <div class="userbox">
-      <label>
-        İsim <span class="req">*</span>
-        <input id="firstName" type="text" placeholder="İsim" required />
-      </label>
-      <label>
-        Soyisim <span class="req">*</span>
-        <input id="lastName" type="text" placeholder="Soyisim" required />
-      </label>
-      <button id="saveBtn" class="btn secondary" title="Logları JSON indir">Kaydet (JSON)</button>
-    </div>
+  <header class="container">
+    <h1>Mentor Geri Bildirim Sistemi</h1>
+    <p class="muted">
+      Videodaki öğrencinin düşünmesini <b>dikkate alma</b>, <b>yorumlama</b> ve <b>karar verme</b> başlıklarında
+      yazın; sistem mentor tarzı geri bildirim üretsin. Sonunda <b>Kaydet</b> ile cihazınıza indirin.
+    </p>
   </header>
 
-  <main class="layout">
-    <section class="left">
-      <div class="card">
-        <div class="card-title">Video</div>
-        <div class="video-wrap">
-          <!-- Değiştirmek için: data-video-id alanını güncelle -->
-          <iframe
-            id="yt"
-            src="https://www.youtube.com/embed/dQw4w9WgXcQ"
-            title="YouTube video"
-            frameborder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            allowfullscreen>
-          </iframe>
+  <main class="container grid">
+    <section class="card">
+      <h2>1) Kimlik Bilgileri</h2>
+      <div class="row">
+        <div class="field">
+          <label for="firstName">İsim <span class="req">*</span></label>
+          <input id="firstName" type="text" placeholder="Örn: Ayşe" autocomplete="given-name" />
         </div>
-        <div class="hint">İsterseniz videoyu kendi YouTube linkinizle değiştirebilirsiniz.</div>
+        <div class="field">
+          <label for="lastName">Soyisim <span class="req">*</span></label>
+          <input id="lastName" type="text" placeholder="Örn: Yılmaz" autocomplete="family-name" />
+        </div>
+      </div>
+      <p class="hint">İsim ve soyisim zorunludur. Bilgiler tarayıcıda yerel olarak saklanır (localStorage).</p>
+    </section>
+
+    <section class="card">
+      <h2>2) Video ve Yönerge</h2>
+      <div class="row">
+        <div class="field grow">
+          <label for="videoUrl">Video bağlantısı (YouTube/Drive vb.)</label>
+          <input id="videoUrl" type="url" placeholder="https://..." />
+        </div>
+        <button class="btn" id="loadVideoBtn" type="button">Videoyu Yükle</button>
       </div>
 
-      <div class="card">
-        <div class="card-title">Yönergeler</div>
-        <div class="instructions" id="instructions">
-          <ol>
-            <li>Önce <b>Deniz</b>'in çözümünü/konuşmasını okuyun.</li>
-            <li>Aşağıdaki sırayla yazın: <b>Attending</b>, <b>Interpreting</b>, <b>Responding</b>.</li>
-            <li>Her boyutta hem <b>deficit</b> (zorluk/yanılgı) hem <b>strength</b> (kaynak/güçlü yan) kanıtı ekleyin.</li>
-            <li>Genel cümlelerden kaçının; mutlaka <b>öğrencinin işine/ifadesine</b> dayanın.</li>
-            <li>Mentor size 0–1–2 kanıt düzeyi verecek ve <b>cevabı söylemeden</b> revize ettirecek.</li>
-          </ol>
+      <div class="videoWrap" id="videoWrap" aria-label="Video izleme alanı">
+        <div class="videoPlaceholder">
+          Video burada görünecek. Bağlantıyı yapıştırıp <b>Videoyu Yükle</b>’ye basın.
         </div>
+      </div>
+
+      <div class="field">
+        <label for="instruction">Yönerge (düzenlenebilir)</label>
+        <textarea id="instruction" rows="5"></textarea>
       </div>
     </section>
 
-    <section class="right">
-      <div class="card chat-card">
-        <div class="card-title">Chatbot</div>
+    <section class="card">
+      <h2>3) Gözlemleriniz (Kopyala-Yapıştır)</h2>
 
-        <div id="chat" class="chat"></div>
-
-        <div class="composer">
-          <textarea id="input" rows="3" placeholder="Mesajınızı yazın..."></textarea>
-          <button id="sendBtn" class="btn">Gönder</button>
-        </div>
-
-        <div class="tiny">
-          Not: OpenAI API anahtarı tarayıcıda tutulmaz; istekler sunucu üzerinden gider.
-        </div>
+      <div class="field">
+        <label for="attention">Dikkate Alma</label>
+        <textarea id="attention" rows="5" placeholder="Dikkate alma ile ilgili gözlemlerinizi buraya yapıştırın..."></textarea>
       </div>
+
+      <div class="field">
+        <label for="interpretation">Yorumlama</label>
+        <textarea id="interpretation" rows="5" placeholder="Yorumlama ile ilgili gözlemlerinizi buraya yapıştırın..."></textarea>
+      </div>
+
+      <div class="field">
+        <label for="decision">Karar Verme</label>
+        <textarea id="decision" rows="5" placeholder="Karar verme ile ilgili gözlemlerinizi buraya yapıştırın..."></textarea>
+      </div>
+
+      <div class="row actions">
+        <button class="btn primary" id="getFeedbackBtn" type="button">Mentor Geri Bildirimi Al</button>
+        <button class="btn" id="clearBtn" type="button">Temizle</button>
+      </div>
+
+      <div class="status" id="status" role="status" aria-live="polite"></div>
+
+      <div class="field">
+        <label for="mentorFeedback">Mentor Geri Bildirimi</label>
+        <textarea id="mentorFeedback" rows="10" placeholder="Geri bildirim burada görünecek..." readonly></textarea>
+        <p class="hint">
+          Not: Bu arayüz GitHub Pages üzerinde çalışır. Geri bildirim için Render üzerindeki API’ye istek gönderir.
+        </p>
+      </div>
+
+      <div class="row actions">
+        <button class="btn success" id="saveBtn" type="button">Kaydet ve İndir</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Bağlantı Durumu</h2>
+      <p class="muted">API adresi: <code id="apiBase"></code></p>
+      <button class="btn" id="testApiBtn" type="button">API Bağlantısını Test Et</button>
+      <pre class="mono" id="apiTestOutput" aria-label="API test çıktısı"></pre>
+      <p class="hint">
+        Eğer API’niz farklı bir yol kullanıyorsa <code>config.js</code> içindeki <code>ENDPOINT_CANDIDATES</code>
+        listesini güncelleyebilirsiniz.
+      </p>
     </section>
   </main>
 
+  <footer class="container footer">
+    <small class="muted">© Mentor geri bildirim prototipi — GitHub Pages uyumlu (statik).</small>
+  </footer>
+
+  <script src="config.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

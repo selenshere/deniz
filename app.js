@@ -1,346 +1,344 @@
+/* global API_BASE_URL, ENDPOINT_CANDIDATES, HEALTH_ENDPOINTS */
 
-const chatEl = document.getElementById("chat");
-const inputEl = document.getElementById("input");
-const sendBtn = document.getElementById("sendBtn");
-const saveBtn = document.getElementById("saveBtn");
-// Dimension selector was removed from UI; keep optional support if it exists.
-const dimEl = document.getElementById("dimension");
-const firstNameEl = document.getElementById("firstName");
-const lastNameEl = document.getElementById("lastName");
+const $ = (id) => document.getElementById(id);
 
-// Start modal elements
-const startModalEl = document.getElementById("startModal");
-const startBtnEl = document.getElementById("startBtn");
-const modalFirstNameEl = document.getElementById("modalFirstName");
-const modalLastNameEl = document.getElementById("modalLastName");
-const pasteAttEl = document.getElementById("pasteAttending");
-const pasteIntEl = document.getElementById("pasteInterpreting");
-const pasteResEl = document.getElementById("pasteResponding");
+const els = {
+  firstName: $("firstName"),
+  lastName: $("lastName"),
+  videoUrl: $("videoUrl"),
+  loadVideoBtn: $("loadVideoBtn"),
+  videoWrap: $("videoWrap"),
+  instruction: $("instruction"),
+  attention: $("attention"),
+  interpretation: $("interpretation"),
+  decision: $("decision"),
+  getFeedbackBtn: $("getFeedbackBtn"),
+  clearBtn: $("clearBtn"),
+  mentorFeedback: $("mentorFeedback"),
+  saveBtn: $("saveBtn"),
+  status: $("status"),
+  apiBase: $("apiBase"),
+  testApiBtn: $("testApiBtn"),
+  apiTestOutput: $("apiTestOutput")
+};
 
-const logs = []; // {role, content, ts}
-let sessionStarted = false;
+const DEFAULT_INSTRUCTION = `Görev:
+- Videodaki öğrencinin düşünmesini üç başlıkta analiz edin: (1) Dikkate Alma, (2) Yorumlama, (3) Karar Verme.
+- Metinlerinizi ilgili alanlara kopyala-yapıştır yapın.
+- “Mentor Geri Bildirimi Al” ile mentor tarzında; güçlü yönler + geliştirme önerileri + örnek soru/ifadeler içeren geri bildirim alın.
+- Sonunda “Kaydet ve İndir” ile raporu cihazınıza indirin.`;
 
-// API base (same-origin by default).
-// If you host the frontend separately, you MUST point it to the backend.
-// You can set it in three ways (first match wins):
-// 1) URL query: ?api=https://your-backend.example.com
-// 2) localStorage: apiBase
-// 3) index.html meta: <meta name="api-base" content="https://your-backend.example.com">
-const META_API_BASE = (document.querySelector('meta[name="api-base"]')?.getAttribute("content") || "").trim();
-
-function getQueryApiBase() {
-  try {
-    const u = new URL(window.location.href);
-    return (u.searchParams.get("api") || "").trim();
-  } catch {
-    return "";
-  }
+function setStatus(msg, tone="info"){
+  const prefix = tone === "ok" ? "✅ " : tone === "warn" ? "⚠️ " : tone === "err" ? "⛔ " : "ℹ️ ";
+  els.status.textContent = prefix + msg;
 }
 
-function getStoredApiBase() {
-  try {
-    return (localStorage.getItem("apiBase") || "").trim();
-  } catch {
-    return "";
-  }
+function loadFromStorage(){
+  els.firstName.value = localStorage.getItem("mentor_firstName") || "";
+  els.lastName.value = localStorage.getItem("mentor_lastName") || "";
+  els.videoUrl.value = localStorage.getItem("mentor_videoUrl") || "";
+  els.instruction.value = localStorage.getItem("mentor_instruction") || DEFAULT_INSTRUCTION;
+
+  els.attention.value = localStorage.getItem("mentor_attention") || "";
+  els.interpretation.value = localStorage.getItem("mentor_interpretation") || "";
+  els.decision.value = localStorage.getItem("mentor_decision") || "";
+  els.mentorFeedback.value = localStorage.getItem("mentor_feedback") || "";
 }
 
-function setStoredApiBase(value) {
-  try {
-    if (!value) localStorage.removeItem("apiBase");
-    else localStorage.setItem("apiBase", value);
-  } catch {
-    // ignore
-  }
+function saveToStorage(){
+  localStorage.setItem("mentor_firstName", els.firstName.value.trim());
+  localStorage.setItem("mentor_lastName", els.lastName.value.trim());
+  localStorage.setItem("mentor_videoUrl", els.videoUrl.value.trim());
+  localStorage.setItem("mentor_instruction", els.instruction.value);
+
+  localStorage.setItem("mentor_attention", els.attention.value);
+  localStorage.setItem("mentor_interpretation", els.interpretation.value);
+  localStorage.setItem("mentor_decision", els.decision.value);
+  localStorage.setItem("mentor_feedback", els.mentorFeedback.value);
 }
 
-function getApiChatUrl() {
-  const apiBase = getQueryApiBase() || getStoredApiBase() || META_API_BASE;
-  return apiBase ? `${apiBase.replace(/\/$/, "")}/api/chat` : "/api/chat";
+function isValidName(){
+  const fn = els.firstName.value.trim();
+  const ln = els.lastName.value.trim();
+  return fn.length > 0 && ln.length > 0;
 }
 
-async function readJsonSafely(resp) {
-  const ct = resp.headers.get("content-type") || "";
-  if (ct.includes("application/json")) {
-    try {
-      return await resp.json();
-    } catch {
-      // fall through
-    }
-  }
-  const text = await resp.text().catch(() => "");
-  return { _text: text };
-}
-
-function maybeHelpConfigureApiBase(resp, data) {
-  // If the frontend is hosted statically, /api/chat will hit the static host and often return HTML + 405.
-  const ct = resp.headers.get("content-type") || "";
-  const looksLikeHtml = !ct.includes("application/json") && typeof data?._text === "string" && data._text.trim().startsWith("<");
-  if (resp.status !== 405 && !looksLikeHtml) return false;
-
-  const current = getQueryApiBase() || getStoredApiBase() || META_API_BASE || "";
-  const hint =
-    "Bu sayfa backend'siz (statik) çalışıyor gibi görünüyor.\n" +
-    "Lütfen /api/chat endpoint'inin bulunduğu backend adresini girin (ör: https://your-app.onrender.com).";
-  const value = (window.prompt(hint, current) || "").trim();
-  if (!value) return false;
-  setStoredApiBase(value);
-  return true;
-}
-
-function nowISO() {
-  return new Date().toISOString();
-}
-
-function addMessage(role, content) {
-  logs.push({ role, content, ts: nowISO() });
-
-  const wrap = document.createElement("div");
-  wrap.className = `msg ${role}`;
-  const bubble = document.createElement("div");
-  bubble.className = "bubble";
-  bubble.textContent = content;
-
-  const meta = document.createElement("div");
-  meta.className = "meta";
-  meta.textContent = role === "user" ? "Siz" : "Mentor";
-
-  const col = document.createElement("div");
-  col.appendChild(bubble);
-  col.appendChild(meta);
-
-  wrap.appendChild(col);
-  chatEl.appendChild(wrap);
-  chatEl.scrollTop = chatEl.scrollHeight;
-}
-
-function requireName() {
-  const fn = firstNameEl.value.trim();
-  const ln = lastNameEl.value.trim();
-  if (!fn || !ln) {
-    alert("Lütfen isim ve soyisim alanlarını doldurun (zorunlu).");
-    return null;
-  }
-  return { firstName: fn, lastName: ln };
-}
-
-function sanitizeFilePart(s) {
-  return s
-    .trim()
+function sanitizeFilenamePart(s){
+  return (s || "")
+    .toLowerCase()
     .replace(/\s+/g, "_")
-    .replace(/[^\p{L}\p{N}_-]/gu, "");
+    .replace(/[^a-z0-9_\-çğıöşü]/gi, "")
+    .slice(0, 40) || "kullanici";
 }
 
-async function send() {
-  if (!sessionStarted) {
-    // Kullanıcı modalı kapatmadan serbest yazmasın
-    openStartModal();
+function toYouTubeEmbed(url){
+  try{
+    const u = new URL(url);
+    // youtu.be/<id>
+    if(u.hostname.includes("youtu.be")){
+      const id = u.pathname.replace("/", "");
+      return `https://www.youtube.com/embed/${id}`;
+    }
+    // youtube.com/watch?v=<id>
+    if(u.hostname.includes("youtube.com")){
+      const id = u.searchParams.get("v");
+      if(id) return `https://www.youtube.com/embed/${id}`;
+      // youtube.com/embed/<id>
+      if(u.pathname.startsWith("/embed/")) return url;
+    }
+  }catch(_){}
+  return null;
+}
+
+function renderVideo(url){
+  const wrap = els.videoWrap;
+  wrap.innerHTML = "";
+  const yt = toYouTubeEmbed(url);
+
+  if(yt){
+    const iframe = document.createElement("iframe");
+    iframe.src = yt;
+    iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
+    iframe.allowFullscreen = true;
+    wrap.appendChild(iframe);
     return;
   }
-  const user = requireName();
-  if (!user) return;
 
-  const raw = inputEl.value.trim();
-  if (!raw) return;
+  // generic iframe attempt
+  if(url){
+    const iframe = document.createElement("iframe");
+    iframe.src = url;
+    iframe.allowFullscreen = true;
+    wrap.appendChild(iframe);
+    return;
+  }
 
-  const dimension = (dimEl?.value || "").trim();
-  const content = dimension ? `[${dimension}] ${raw}` : raw;
+  wrap.innerHTML = `<div class="videoPlaceholder">Video burada görünecek. Bağlantıyı yapıştırıp <b>Videoyu Yükle</b>’ye basın.</div>`;
+}
 
-  addMessage("user", content);
-  inputEl.value = "";
-  sendBtn.disabled = true;
-  sendBtn.textContent = "Gönderiliyor...";
+async function postJson(url, body){
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  });
+  const text = await res.text();
+  let data = null;
+  try{ data = JSON.parse(text); } catch(_){}
+  return { ok: res.ok, status: res.status, data, text };
+}
 
-  try {
-    // Send only user/assistant logs (system stays on server)
-    const messages = logs.map(l => ({
-      role: l.role === "assistant" ? "assistant" : "user",
-      content: l.content
-    }));
-
-    const resp = await fetch(getApiChatUrl(), {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...user, messages })
-    });
-
-    const data = await readJsonSafely(resp);
-    if (!resp.ok) {
-      // Offer a one-time configuration helper for common 405/HTML cases
-      if (maybeHelpConfigureApiBase(resp, data)) {
-        return await send();
+async function tryMentorFeedback(payload){
+  const errors = [];
+  for(const ep of ENDPOINT_CANDIDATES){
+    const full = API_BASE_URL.replace(/\/$/, "") + ep;
+    try{
+      const r = await postJson(full, payload);
+      if(r.ok){
+        // Accept a few common response shapes
+        const fb =
+          (r.data && (r.data.feedback || r.data.output || r.data.message || r.data.text)) ||
+          (typeof r.data === "string" ? r.data : null) ||
+          r.text;
+        return { endpoint: ep, feedback: fb, raw: r };
       }
-      const fallback = data?._text
-        ? `Sunucudan JSON gelmedi (${resp.status}). API adresini kontrol edin.`
-        : "İstek başarısız.";
-      throw new Error(data?.error || fallback);
+      errors.push(`${ep} -> HTTP ${r.status}`);
+    }catch(e){
+      errors.push(`${ep} -> ${String(e)}`);
     }
+  }
+  throw new Error("Hiçbir endpoint yanıt vermedi. Denenenler: " + errors.join(" | "));
+}
 
-    addMessage("assistant", data.assistant || "");
-  } catch (e) {
-    console.error(e);
-    addMessage("assistant", `Üzgünüm, bir hata oldu: ${e.message}`);
-  } finally {
-    sendBtn.disabled = false;
-    sendBtn.textContent = "Gönder";
+async function onGetFeedback(){
+  saveToStorage();
+  if(!isValidName()){
+    setStatus("Lütfen isim ve soyisim alanlarını doldurun.", "warn");
+    return;
+  }
+
+  const attention = els.attention.value.trim();
+  const interpretation = els.interpretation.value.trim();
+  const decision = els.decision.value.trim();
+
+  if(!attention && !interpretation && !decision){
+    setStatus("En az bir alana (Dikkate Alma / Yorumlama / Karar Verme) metin ekleyin.", "warn");
+    return;
+  }
+
+  els.getFeedbackBtn.disabled = true;
+  setStatus("Mentor geri bildirimi hazırlanıyor...", "info");
+
+  const payload = {
+    name: els.firstName.value.trim(),
+    surname: els.lastName.value.trim(),
+    instruction: els.instruction.value,
+    observations: {
+      dikkate_alma: attention,
+      yorumlama: interpretation,
+      karar_verme: decision
+    },
+    // backend tarafında prompt oluşturmayı kolaylaştırmak için ipucu:
+    rubric: ["Dikkate Alma", "Yorumlama", "Karar Verme"],
+    language: "tr"
+  };
+
+  try{
+    const result = await tryMentorFeedback(payload);
+    els.mentorFeedback.value = result.feedback?.trim() || "";
+    saveToStorage();
+    setStatus(`Geri bildirim alındı. (endpoint: ${result.endpoint})`, "ok");
+  }catch(e){
+    setStatus(String(e.message || e), "err");
+  }finally{
+    els.getFeedbackBtn.disabled = false;
   }
 }
 
-sendBtn.addEventListener("click", send);
-inputEl.addEventListener("keydown", (e) => {
-  if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) send();
-});
+function onClear(){
+  els.attention.value = "";
+  els.interpretation.value = "";
+  els.decision.value = "";
+  els.mentorFeedback.value = "";
+  saveToStorage();
+  setStatus("Alanlar temizlendi.", "ok");
+}
 
-saveBtn.addEventListener("click", () => {
-  const user = requireName();
-  if (!user) return;
-
-  const payload = {
-    user,
-    student: "Deniz",
-    exportedAt: nowISO(),
-    logs
-  };
-
-  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+function downloadTextFile(filename, content){
+  const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
-  const fn = sanitizeFilePart(user.firstName);
-  const ln = sanitizeFilePart(user.lastName);
-  a.download = `${fn}_${ln}_deniz.json`;
-  a.href = URL.createObjectURL(blob);
+  a.href = url;
+  a.download = filename;
   document.body.appendChild(a);
   a.click();
   a.remove();
-  URL.revokeObjectURL(a.href);
-});
-
-function setComposerEnabled(enabled) {
-  if (dimEl) dimEl.disabled = !enabled;
-  inputEl.disabled = !enabled;
-  sendBtn.disabled = !enabled;
-  if (!enabled) {
-    sendBtn.textContent = "Gönder";
-  }
+  URL.revokeObjectURL(url);
 }
 
-function openStartModal() {
-  // Modal açılırken isim alanlarını header ile senkronla
-  if (modalFirstNameEl && firstNameEl && !modalFirstNameEl.value) {
-    modalFirstNameEl.value = firstNameEl.value;
-  }
-  if (modalLastNameEl && lastNameEl && !modalLastNameEl.value) {
-    modalLastNameEl.value = lastNameEl.value;
-  }
-  startModalEl.classList.add("show");
-  startModalEl.setAttribute("aria-hidden", "false");
-  updateStartBtnState();
-}
-
-function closeStartModal() {
-  startModalEl.classList.remove("show");
-  startModalEl.setAttribute("aria-hidden", "true");
-  // Ensure the overlay is gone and the composer is ready
-  setTimeout(() => {
-    try { inputEl?.focus(); } catch {}
-  }, 0);
-}
-
-function syncModalNameToHeader() {
-  // Modal açıkken header alanları kapalı kalabileceği için isim/soyisim'i buradan senkronla
-  if (modalFirstNameEl && modalFirstNameEl.value.trim()) firstNameEl.value = modalFirstNameEl.value.trim();
-  if (modalLastNameEl && modalLastNameEl.value.trim()) lastNameEl.value = modalLastNameEl.value.trim();
-}
-
-function validateStartModal() {
-  const missing = [];
-  if (!(modalFirstNameEl?.value || "").trim()) missing.push("İsim");
-  if (!(modalLastNameEl?.value || "").trim()) missing.push("Soyisim");
-  if (!(pasteAttEl?.value || "").trim()) missing.push("Attending");
-  if (!(pasteIntEl?.value || "").trim()) missing.push("Interpreting");
-  if (!(pasteResEl?.value || "").trim()) missing.push("Responding");
-  return missing;
-}
-
-function updateStartBtnState() {
-  const missing = validateStartModal();
-  if (startBtnEl) startBtnEl.disabled = missing.length > 0;
-}
-
-async function startFromPastes() {
-  const missing = validateStartModal();
-  if (missing.length) {
-    alert(`Lütfen pop-up içindeki zorunlu alanları doldurun: ${missing.join(", ")}`);
-    updateStartBtnState();
+function onSave(){
+  saveToStorage();
+  if(!isValidName()){
+    setStatus("Kaydetmek için isim ve soyisim zorunludur.", "warn");
     return;
   }
+  const now = new Date();
+  const stamp = now.toISOString().replace(/[:]/g,"-").replace(/\..+/, "");
+  const fn = sanitizeFilenamePart(els.firstName.value);
+  const ln = sanitizeFilenamePart(els.lastName.value);
 
-  syncModalNameToHeader();
-  const user = requireName();
-  if (!user) return; // isim/soyisim yoksa modal kapanmasın
+  const report = {
+    isim: els.firstName.value.trim(),
+    soyisim: els.lastName.value.trim(),
+    etiketi: "deniz",
+    zaman: now.toISOString(),
+    video: els.videoUrl.value.trim(),
+    yonerge: els.instruction.value,
+    girdiler: {
+      dikkate_alma: els.attention.value,
+      yorumlama: els.interpretation.value,
+      karar_verme: els.decision.value
+    },
+    mentor_geribildirim: els.mentorFeedback.value
+  };
 
-  sessionStarted = true;
-  closeStartModal();
-  setComposerEnabled(true);
+  const txt = [
+    "MENTOR GERİ BİLDİRİM RAPORU",
+    "===========================",
+    `İsim Soyisim: ${report.isim} ${report.soyisim}`,
+    `Etiket: ${report.etiketi}`,
+    `Zaman: ${report.zaman}`,
+    report.video ? `Video: ${report.video}` : "Video: (boş)",
+    "",
+    "YÖNERGE",
+    "-------",
+    report.yonerge || "",
+    "",
+    "DİKKATE ALMA",
+    "------------",
+    report.girdiler.dikkate_alma || "",
+    "",
+    "YORUMLAMA",
+    "---------",
+    report.girdiler.yorumlama || "",
+    "",
+    "KARAR VERME",
+    "-----------",
+    report.girdiler.karar_verme || "",
+    "",
+    "MENTOR GERİ BİLDİRİMİ",
+    "----------------------",
+    report.mentor_geribildirim || "",
+    ""
+  ].join("\n");
 
-  const a = (pasteAttEl?.value || "").trim();
-  const i = (pasteIntEl?.value || "").trim();
-  const r = (pasteResEl?.value || "").trim();
+  // Requirement: "kullanıcı adı soy adı ve deniz olarak tamamlanıp cihaza inecek"
+  // => filename includes name_surname_deniz
+  const filenameTxt = `${fn}_${ln}_deniz_${stamp}.txt`;
+  const filenameJson = `${fn}_${ln}_deniz_${stamp}.json`;
 
-  if (a) addMessage("user", `[Attending] ${a}`);
-  if (i) addMessage("user", `[Interpreting] ${i}`);
-  if (r) addMessage("user", `[Responding] ${r}`);
+  downloadTextFile(filenameTxt, txt);
+  downloadTextFile(filenameJson, JSON.stringify(report, null, 2));
 
-  // Mentor'dan üç boyut için birden dönüt iste
-  addMessage(
-    "user",
-    "Yukarıda Attending/Interpreting/Responding için daha önce yazdığım cevapları yapıştırdım. Lütfen her boyut için ayrı ayrı mentor dönütü ver (Evidence Level + gerekçe + geliştirmek için gerekenler + yönlendirici sorular + revizyon isteği)."
-  );
-
-  // Otomatik ilk dönüt
-  setComposerEnabled(false);
-  try {
-    const messages = logs.map(l => ({
-      role: l.role === "assistant" ? "assistant" : "user",
-      content: l.content
-    }));
-
-    const resp = await fetch(getApiChatUrl(), {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...user, messages })
-    });
-
-    // Some hosting setups may return HTML error pages; guard JSON parsing
-    const data = await readJsonSafely(resp);
-    if (!resp.ok) {
-      if (maybeHelpConfigureApiBase(resp, data)) {
-        return await startFromPastes();
-      }
-      const msg = data?.error || (data?._text ? `Sunucudan JSON gelmedi (${resp.status}). API adresini kontrol edin.` : "İstek başarısız.");
-      throw new Error(msg);
-    }
-
-    addMessage("assistant", data.assistant || "");
-  } catch (e) {
-    console.error(e);
-    addMessage("assistant", `Üzgünüm, bir hata oldu: ${e.message}`);
-  } finally {
-    setComposerEnabled(true);
-  }
+  setStatus("Rapor indirildi (TXT + JSON).", "ok");
 }
 
-// Modal wiring
-startBtnEl.addEventListener("click", () => startFromPastes());
+async function onTestApi(){
+  els.apiTestOutput.textContent = "";
+  setStatus("API test ediliyor...", "info");
+  const base = API_BASE_URL.replace(/\/$/, "");
+  const lines = [];
+  for(const ep of HEALTH_ENDPOINTS){
+    const url = base + ep;
+    try{
+      const res = await fetch(url, { method: "GET" });
+      lines.push(`${ep} -> HTTP ${res.status}`);
+      if(res.ok){
+        const ct = res.headers.get("content-type") || "";
+        const text = await res.text();
+        lines.push(ct.includes("text/html") ? "(HTML) OK" : text.slice(0, 500));
+        setStatus(`API erişilebilir görünüyor. (${ep})`, "ok");
+        els.apiTestOutput.textContent = lines.join("\n");
+        return;
+      }
+    }catch(e){
+      lines.push(`${ep} -> ${String(e)}`);
+    }
+  }
+  setStatus("API testinde sorun var. Render uygulamanız uyuyor mu? (503/CORS olabilir)", "warn");
+  els.apiTestOutput.textContent = lines.join("\n");
+}
 
-// Modal isim alanları değişince header'a yansıt
-modalFirstNameEl?.addEventListener("input", syncModalNameToHeader);
-modalLastNameEl?.addEventListener("input", syncModalNameToHeader);
+function wireEvents(){
+  ["input","change"].forEach(evt=>{
+    els.firstName.addEventListener(evt, saveToStorage);
+    els.lastName.addEventListener(evt, saveToStorage);
+    els.videoUrl.addEventListener(evt, saveToStorage);
+    els.instruction.addEventListener(evt, saveToStorage);
+    els.attention.addEventListener(evt, saveToStorage);
+    els.interpretation.addEventListener(evt, saveToStorage);
+    els.decision.addEventListener(evt, saveToStorage);
+  });
 
-// Modal zorunlu alanlar doldukça butonu aç/kapat
-[modalFirstNameEl, modalLastNameEl, pasteAttEl, pasteIntEl, pasteResEl].forEach(el => {
-  el?.addEventListener("input", updateStartBtnState);
-});
+  els.loadVideoBtn.addEventListener("click", ()=>{
+    const url = els.videoUrl.value.trim();
+    renderVideo(url);
+    saveToStorage();
+    setStatus(url ? "Video yüklendi (iframe)." : "Video bağlantısı boş.", url ? "ok" : "warn");
+  });
 
-// İlk açılışta modal göster ve composer'ı kilitle
-setComposerEnabled(false);
-openStartModal();
+  els.getFeedbackBtn.addEventListener("click", onGetFeedback);
+  els.clearBtn.addEventListener("click", onClear);
+  els.saveBtn.addEventListener("click", onSave);
+  els.testApiBtn.addEventListener("click", onTestApi);
+}
+
+function init(){
+  els.apiBase.textContent = API_BASE_URL;
+  loadFromStorage();
+  renderVideo(els.videoUrl.value.trim());
+  wireEvents();
+  setStatus("Hazır. İsim+soyisim girin, videoyu yükleyin, metinleri yapıştırın.", "ok");
+}
+
+init();

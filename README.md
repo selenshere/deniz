@@ -1,40 +1,63 @@
-# Deniz Noticing Mentor (Render + OpenAI)
+# Öğretmen Adayı Mentor Geri Bildirim Sistemi (GitHub Pages)
 
-Türkçe arayüzlü basit bir web uygulaması:
-- Sol tarafta YouTube video
-- Sağ tarafta Noticing Mentor chatbot
+Bu proje **statik** (HTML/CSS/JS) bir arayüzdür ve **GitHub Pages** üzerinde çalışır.
+Mentor geri bildirimi için, Render üzerindeki backend'e istek atar:
+
+- `API_BASE_URL`: `https://deniz-vazb.onrender.com` (config.js içinde)
+
+## Özellikler
 - İsim + Soyisim zorunlu
-- Kaydet butonu: sohbet logları JSON olarak iner
-  - Dosya adı: `isim_soyisim_deniz.json`
-- OpenAI API anahtarı **sunucu tarafında** (Render Environment Variable)
+- Video izleme alanı (YouTube linkini embed eder; diğer linkleri iframe ile dener)
+- Yönerge alanı
+- 3 alan: **Dikkate Alma / Yorumlama / Karar Verme** (kopyala-yapıştır)
+- “Mentor Geri Bildirimi Al” -> Render API'ye POST atar, dönen metni ekrana basar
+- “Kaydet ve İndir” -> cihazınıza **TXT + JSON** indirir (dosya adında `isim_soyisim_deniz_...`)
 
-## Kurulum (lokal)
+## Kurulum / Çalıştırma (Yerel)
+Bu proje build gerektirmez.
+- Dosyaları bir klasöre çıkarın
+- `index.html` dosyasını tarayıcıda açın
 
-```bash
-npm install
-export OPENAI_API_KEY="YOUR_KEY"
-# opsiyonel:
-export OPENAI_MODEL="gpt-4o-mini"
-npm start
+> Not: Bazı tarayıcılar `file://` üzerinde CORS nedeniyle fetch'i engelleyebilir.
+> Yerelde test için basit bir sunucu kullanabilirsiniz:
+> - Python: `python -m http.server 8000` (sonra http://localhost:8000)
+
+## GitHub Pages Yayınlama
+1. Bu repoyu GitHub'a yükleyin.
+2. GitHub -> **Settings** -> **Pages**
+3. Source: `Deploy from a branch`
+4. Branch: `main` / root
+5. Kaydedin. Birkaç dakika sonra Pages URL oluşur.
+
+## Backend (Render) Beklentisi
+Frontend şu endpointleri sırayla dener (config.js):
+- `/api/mentor-feedback`
+- `/mentor-feedback`
+- `/api/feedback`
+- `/feedback`
+- `/api/chat`
+- `/chat`
+
+Beklenen POST body örneği:
+```json
+{
+  "name": "Ayşe",
+  "surname": "Yılmaz",
+  "instruction": "....",
+  "observations": {
+    "dikkate_alma": "...",
+    "yorumlama": "...",
+    "karar_verme": "..."
+  },
+  "rubric": ["Dikkate Alma","Yorumlama","Karar Verme"],
+  "language": "tr"
+}
 ```
 
-Tarayıcı: http://localhost:3000
+Beklenen response (örnek):
+- `{ "feedback": "..." }` veya `{ "message": "..." }` veya ham metin.
 
-## Render Deploy
+> Eğer backend farklı bir endpoint/format kullanıyorsa `config.js` ve `app.js` içindeki parse kısmını güncelleyin.
 
-1. GitHub'a bu projeyi yükle
-2. Render'da **New Web Service** → GitHub repo'yu seç
-3. Environment Variables:
-   - `OPENAI_API_KEY` = anahtarın
-   - (opsiyonel) `OPENAI_MODEL` = örn `gpt-4o-mini`
-4. Build Command: boş (Node servis)
-5. Start Command: `npm start`
-
-## YouTube videosunu değiştirme
-
-`public/index.html` içindeki iframe `src` değerini değiştir.
-
-## Notlar
-
-- API key tarayıcıya asla gitmez.
-- Chat geçmişi sadece kullanıcı/assistant mesajları olarak sunucuya gider.
+## Güvenlik
+OpenAI API Key **kesinlikle frontend'e konulmamalı**. Anahtar yalnızca Render backend'de kalmalı.
