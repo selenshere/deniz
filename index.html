@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Deniz Noticing Mentor</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="header">
+    <div class="brand">
+      <div class="logo">🧭</div>
+      <div>
+        <div class="title">Noticing Mentor</div>
+        <div class="subtitle">Öğrenci: <b>Deniz</b> — Attending • Interpreting • Responding</div>
+      </div>
+    </div>
+
+    <div class="userbox">
+      <label>
+        İsim <span class="req">*</span>
+        <input id="firstName" type="text" placeholder="İsim" required />
+      </label>
+      <label>
+        Soyisim <span class="req">*</span>
+        <input id="lastName" type="text" placeholder="Soyisim" required />
+      </label>
+      <button id="saveBtn" class="btn secondary" title="Logları JSON indir">Kaydet (JSON)</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="left">
+      <div class="card">
+        <div class="card-title">Video</div>
+        <div class="video-wrap">
+          <!-- Değiştirmek için: data-video-id alanını güncelle -->
+          <iframe
+            id="yt"
+            src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+            title="YouTube video"
+            frameborder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowfullscreen>
+          </iframe>
+        </div>
+        <div class="hint">İsterseniz videoyu kendi YouTube linkinizle değiştirebilirsiniz.</div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Yönergeler</div>
+        <div class="instructions" id="instructions">
+          <ol>
+            <li>Önce <b>Deniz</b>'in çözümünü/konuşmasını okuyun.</li>
+            <li>Aşağıdaki sırayla yazın: <b>Attending</b>, <b>Interpreting</b>, <b>Responding</b>.</li>
+            <li>Her boyutta hem <b>deficit</b> (zorluk/yanılgı) hem <b>strength</b> (kaynak/güçlü yan) kanıtı ekleyin.</li>
+            <li>Genel cümlelerden kaçının; mutlaka <b>öğrencinin işine/ifadesine</b> dayanın.</li>
+            <li>Mentor size 0–1–2 kanıt düzeyi verecek ve <b>cevabı söylemeden</b> revize ettirecek.</li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <section class="right">
+      <div class="card chat-card">
+        <div class="card-title">Chatbot</div>
+
+        <div id="chat" class="chat"></div>
+
+        <div class="composer">
+          <select id="dimension">
+            <option value="Attending">Attending</option>
+            <option value="Interpreting">Interpreting</option>
+            <option value="Responding">Responding</option>
+          </select>
+          <textarea id="input" rows="3" placeholder="Mesajınızı yazın... (örn. Attending için Deniz'in çalışmasında gördüğünüz kanıtlar)"></textarea>
+          <button id="sendBtn" class="btn">Gönder</button>
+        </div>
+
+        <div class="tiny">
+          Not: OpenAI API anahtarı tarayıcıda tutulmaz; istekler sunucu üzerinden gider.
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

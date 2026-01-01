@@ -1,0 +1,14 @@
+{
+  "name": "deniz-noticing-mentor",
+  "version": "1.0.0",
+  "description": "Professional Noticing Mentor chatbot (Turkish UI) with OpenAI API key kept server-side for Render deployment.",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "openai": "^4.56.0"
+  }
+}
