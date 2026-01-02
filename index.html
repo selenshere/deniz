@@ -19,16 +19,16 @@
       <div class="row">
         <div class="field">
           <label for="firstName">İsim <span class="req">*</span></label>
-          <input id="firstName" type="text" placeholder="Örn: Ayşe" autocomplete="given-name" />
+          <input id="firstName" type="text" placeholder="İsim" autocomplete="given-name" />
         </div>
         <div class="field">
           <label for="lastName">Soyisim <span class="req">*</span></label>
-          <input id="lastName" type="text" placeholder="Örn: Yılmaz" autocomplete="family-name" />
+          <input id="lastName" type="text" placeholder="Soyisim" autocomplete="family-name" />
         </div>
       </div>
 
       <!-- Video sabit -->
-      <p class="hint"><b>Video:</b> Aşağıdaki videoyu izleyin (sabit).</p>
+      <p class="hint"><b>Video:</b> Aşağıdaki videoyu izleyin.</p>
 
       <div class="split">
         <div class="videoCol">
@@ -37,11 +37,10 @@
               Video burada görünecek. Bağlantıyı yapıştırıp <b>Videoyu Yükle</b>’ye basın.
             </div>
           </div>
-          <p class="hint">İsim ve soyisim zorunludur. (Refresh sonrası sayfa temiz başlar.)</p>
         </div>
 
         <div class="obsCol" aria-label="Kopyala-yapıştır alanları">
-          <h3>Gözlemleriniz (Kopyala-Yapıştır)</h3>
+          <h3>Gözlemleriniz</h3>
 
           <div class="field">
             <label for="attention">Dikkate Alma</label>
@@ -60,7 +59,6 @@
 
           <div class="row actions">
             <button class="btn primary" id="startMentorBtn" type="button">Mentor Sohbetini Başlat</button>
-            <button class="btn" id="clearBtn" type="button">Temizle</button>
           </div>
         </div>
       </div>
@@ -86,7 +84,6 @@
   </main>
 
   <footer class="container footer">
-    <small class="muted">© Mentor geri bildirim prototipi — GitHub Pages uyumlu (statik).</small>
   </footer>
 
   <script src="config.js"></script>
