@@ -3,7 +3,7 @@
 (() => {
   const $ = (id) => document.getElementById(id);
 
-  const FIXED_VIDEO_URL = 'https://youtu.be/b7cuJm2rTCU';
+  const FIXED_VIDEO_URL = 'https://youtu.be/WFr9mYUiRy8';
   const FIXED_INSTRUCTION = 'Videodaki öğrencinin düşünmesini dikkate alma, yorumlama ve karar verme başlıklarında yazın. Mentor ile çok turlu sohbet ederek geri bildirim alın. Süreç bitince Kaydet ve İndir.';
 
   const els = {
