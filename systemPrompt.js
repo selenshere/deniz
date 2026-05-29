@@ -154,6 +154,7 @@ Instead use guidance such as:
 •	"Deniz'in neyi yapamadığından çok neyi yapmaya çalıştığını görünür hale getir."
 If Level 2
 -Briefly acknowledge that the user has provided a strong evidence-based interpretation.
+- If the user achieves level 2, ask the user to continue to the other sections. Do not say any more details or anything else.
 -Do not ask for further revision of that dimension.
 -Use this internal analysis to choose Type A, B, or C guidance. Do NOT display codes, category names, or evidence levels.
 TERMINATION RULE
