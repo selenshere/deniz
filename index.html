@@ -3,32 +3,32 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Öğretmen Adayı Mentor Sistemi</title>
+  <title>AI-Supported Mentoring</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <header class="container">
-    <h1>Mentor Geri Bildirim Sistemi</h1>
-    <p class="lead">Deniz’in videoya ait açıklamasını daha önce analiz ettiniz. Aşağıdaki kutulara önceki analizlerinizi kopyalayıp yapıştırın ve ardından “Mentor Sohbetini Başlat” butonuna basın. Daha sonra mentor ile sohbet ederek Deniz’in açıklamalarına yönelik fark ettiklerinizi analiz edin. Süreç tamamlandığında “Kaydet” butonuna basarak belgeyi cihazınıza indirin. İndirdiğiniz belgeyi paylaşın.</p>
+    <h1>Mentor Feedback</h1>
+    <p class="lead">You previously analysed Deniz's explanation of the video. Copy and paste your previous analyses into the boxes below, then press the "Start Mentor Chat" button. Next, chat with your mentor and analyse what you noticed regarding Deniz's explanation. Once the process is complete, press the "Save" button to download the document to your device. Share the downloaded document.</p>
   </header>
 
   <main class="container">
     <section class="card">
-      <h2>Başlangıç</h2>
+      <h2>Intro</h2>
 
       <div class="row">
         <div class="field">
-          <label for="firstName">İsim <span class="req">*</span></label>
-          <input id="firstName" type="text" placeholder="İsim" autocomplete="given-name" />
+          <label for="firstName">Name <span class="req">*</span></label>
+          <input id="firstName" type="text" placeholder="Name" autocomplete="given-name" />
         </div>
         <div class="field">
-          <label for="lastName">Soyisim <span class="req">*</span></label>
-          <input id="lastName" type="text" placeholder="Soyisim" autocomplete="family-name" />
+          <label for="lastName">Surname <span class="req">*</span></label>
+          <input id="lastName" type="text" placeholder="Surname" autocomplete="family-name" />
         </div>
       </div>
 
       <!-- Video sabit -->
-      <p class="hint"><b>Video:</b> Aşağıdaki videoyu izleyin.</p>
+      <p class="hint"><b>Video:</b> Watch Deniz's explanation.</p>
 
       <div class="split">
         <div class="videoCol">
@@ -43,22 +43,22 @@
           <h3>Gözlemleriniz</h3>
 
           <div class="field">
-            <label for="attention">Dikkate Alma</label>
-            <textarea id="attention" rows="4" placeholder="Dikkate alma ile ilgili gözlemlerinizi buraya yapıştırın..." required></textarea>
+            <label for="attention">Attending</label>
+            <textarea id="attention" rows="4" placeholder="Paste your attending analysis here..." required></textarea>
           </div>
 
           <div class="field">
-            <label for="interpretation">Yorumlama</label>
-            <textarea id="interpretation" rows="4" placeholder="Yorumlama ile ilgili gözlemlerinizi buraya yapıştırın..." required></textarea>
+            <label for="interpretation">Interpreting</label>
+            <textarea id="interpretation" rows="4" placeholder="Paste your interpreting analysis here..." required></textarea>
           </div>
 
           <div class="field">
-            <label for="decision">Karar Verme</label>
-            <textarea id="decision" rows="4" placeholder="Karar verme ile ilgili gözlemlerinizi buraya yapıştırın..." required></textarea>
+            <label for="decision">Responding</label>
+            <textarea id="decision" rows="4" placeholder="Paste your responding analysis here..." required></textarea>
           </div>
 
           <div class="row actions">
-            <button class="btn primary" id="startMentorBtn" type="button">Mentor Sohbetini Başlat</button>
+            <button class="btn primary" id="startMentorBtn" type="button">Start Mentor Chat</button>
           </div>
         </div>
       </div>
@@ -67,18 +67,18 @@
     </section>
 
     <section class="card">
-      <h2>Mentor ile Sohbet</h2>
-      <div class="chat" id="chat" aria-label="Mentor sohbeti"></div>
+      <h2>Chat with AI Mentor</h2>
+      <div class="chat" id="chat" aria-label="AI Mentor"></div>
 
       <div class="row actions">
-        <input id="chatInput" type="text" class="grow" placeholder="Mentora mesaj yazın..." />
-        <button class="btn primary" id="sendBtn" type="button">Gönder</button>
+        <input id="chatInput" type="text" class="grow" placeholder="Write your updated analysis..." />
+        <button class="btn primary" id="sendBtn" type="button">Send</button>
       </div>
 
       
 
       <div class="row actions">
-        <button class="btn success" id="saveBtn" type="button">Kaydet ve İndir</button>
+        <button class="btn success" id="saveBtn" type="button">Save and Download</button>
       </div>
     </section>
   </main>
